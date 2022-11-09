@@ -729,13 +729,9 @@ def env_depfile(args):
 #
 def env_combine_setup_parser(subparser):
     """combine multiple environments into one"""
-    subparser.add_argument(
-        "name", nargs=1, help="name of new environment"
-    )
+    subparser.add_argument("name", nargs=1, help="name of new environment")
 
-    subparser.add_argument(
-        "environments", nargs="+", help="do later"
-    )
+    subparser.add_argument("environments", nargs="+", help="do later")
 
 
 def env_combine(args):
@@ -745,10 +741,10 @@ def env_combine(args):
     if ev.exists(name):
         tty.die("'%s': environment already exists" % name)
 
-    #for old_env in args.environments:
-        #if not exists(old_env):
-            #tty.die("'%s': environment does not exists" % old_env)
-        #concretize each
+    # for old_env in args.environments:
+    # if not exists(old_env):
+    # tty.die("'%s': environment does not exists" % old_env)
+    # concretize each
 
     # create new env
     # put concretized specs in new env
