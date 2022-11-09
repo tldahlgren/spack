@@ -739,15 +739,16 @@ def env_combine_setup_parser(subparser):
 
 
 def env_combine(args):
-    print("args name", args.name)
-    print("args envs", args.environments)
+    # Why is args.name a list
+    name = args.name[0]
 
-    # args.name doesnt already exist
+    if ev.exists(name):
+        tty.die("'%s': environment already exists" % name)
 
-    # loop through env args
-        # does env exists
-            # do I die if it doesnt
-        # concretize each
+    #for old_env in args.environments:
+        #if not exists(old_env):
+            #tty.die("'%s': environment does not exists" % old_env)
+        #concretize each
 
     # create new env
     # put concretized specs in new env
