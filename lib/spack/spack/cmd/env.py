@@ -724,6 +724,36 @@ def env_depfile(args):
         sys.stdout.write(makefile)
 
 
+#
+# env combine
+#
+def env_combine_setup_parser(subparser):
+    """combine multiple environments into one"""
+    subparser.add_argument(
+        "name", nargs=1, help="name of new environment"
+    )
+
+    subparser.add_argument(
+        "environments", nargs="+", help="do later"
+    )
+
+
+def env_combine(args):
+    print("args name", args.name)
+    print("args envs", args.environments)
+
+    # args.name doesnt already exist
+
+    # loop through env args
+        # does env exists
+            # do I die if it doesnt
+        # concretize each
+
+    # create new env
+    # put concretized specs in new env
+    return True
+
+
 #: Dictionary mapping subcommand names and aliases to functions
 subcommand_functions = {}
 
