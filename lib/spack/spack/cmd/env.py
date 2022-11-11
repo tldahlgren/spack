@@ -741,10 +741,15 @@ def env_combine(args):
     if ev.exists(name):
         tty.die("'%s': environment already exists" % name)
 
-    # for old_env in args.environments:
-    # if not exists(old_env):
-    # tty.die("'%s': environment does not exists" % old_env)
-    # concretize each
+    for old_env_name in args.environments:
+        if not ev.exists(old_env_name):
+            tty.die("'%s': environment does not exists" % old_env_name)
+
+        old_env = ev.Environment(ev.root(old_env_name))
+
+        # Concretize environment and generate spack.lock file
+        old_env.concretize(force=True)
+        old_env.write()
 
     # create new env
     # put concretized specs in new env
