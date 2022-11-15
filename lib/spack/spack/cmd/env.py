@@ -741,18 +741,57 @@ def env_combine(args):
     if ev.exists(name):
         tty.die("'%s': environment already exists" % name)
 
+    new_dict = dict()
+    new_dict['root'] = []
+    new_dict_root = set()
+    lockfile_meta = None
+
     for old_env_name in args.environments:
         if not ev.exists(old_env_name):
             tty.die("'%s': environment does not exists" % old_env_name)
 
+        # print("--ENV {0}--".format(old_env_name))
         old_env = ev.Environment(ev.root(old_env_name))
 
         # Concretize environment and generate spack.lock file
-        old_env.concretize(force=True)
+        old_env.unify = False
+        old_env.concretize(force=False)
         old_env.write()
 
+        with open(old_env.lock_path) as f:
+            lockfile_as_dict = old_env._read_lockfile(f)
+
+        if lockfile_meta is None:
+            lockfile_meta = lockfile_as_dict['_meta']
+        elif lockfile_meta!= lockfile_as_dict['_meta']:
+            tty.die("All lockfile _meta values must match")
+
+        # print("ENTIRE DICT:", lockfile_as_dict)
+        # print("---------------\n\n")
+
+
+        # Copy roots to new dictionary
+        for root_dict in lockfile_as_dict['roots']:
+            if root_dict['hash'] not in new_dict_root:
+                new_dict['root'].append(root_dict)
+                new_dict_root.add(root_dict['hash'])
+
+
+        # print("---NEW DICT---")
+        # print(new_dict)
+        # print("---------------\n")
+
+
+        # CONCRETE
+        # print("concrete_specs:", lockfile_as_dict['concrete_specs'])
+        # print("---------------\n\n")
+
+
+    # have one enty for each root in each env
+    # merge multiple dictionarys? (update)
+
     # create new env
-    # put concretized specs in new env
+    # put concretized specs in new env _to_lockfile_dict()
     return True
 
 

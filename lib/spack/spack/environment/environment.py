@@ -838,7 +838,7 @@ class Environment:
 
         if os.path.exists(self.lock_path):
             with open(self.lock_path) as f:
-                read_lock_version = self._read_lockfile(f)
+                read_lock_version = self._read_lockfile(f)["_meta"]["lockfile-version"]
 
             if read_lock_version == 1:
                 tty.debug(f"Storing backup of {self.lock_path} at {self._lock_backup_v1_path}")
@@ -2158,7 +2158,7 @@ class Environment:
         """Read a lockfile from a file or from a raw string."""
         lockfile_dict = sjson.load(file_or_json)
         self._read_lockfile_dict(lockfile_dict)
-        return lockfile_dict["_meta"]["lockfile-version"]
+        return lockfile_dict
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
