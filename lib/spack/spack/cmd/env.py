@@ -742,7 +742,7 @@ def env_combine(args):
         tty.die("'%s': environment already exists" % name)
 
     new_dict = dict()
-    new_dict['root'] = []
+    new_dict["root"] = []
     new_dict_root = set()
     lockfile_meta = None
 
@@ -762,30 +762,26 @@ def env_combine(args):
             lockfile_as_dict = old_env._read_lockfile(f)
 
         if lockfile_meta is None:
-            lockfile_meta = lockfile_as_dict['_meta']
-        elif lockfile_meta!= lockfile_as_dict['_meta']:
+            lockfile_meta = lockfile_as_dict["_meta"]
+        elif lockfile_meta != lockfile_as_dict["_meta"]:
             tty.die("All lockfile _meta values must match")
 
         # print("ENTIRE DICT:", lockfile_as_dict)
         # print("---------------\n\n")
 
-
         # Copy roots to new dictionary
-        for root_dict in lockfile_as_dict['roots']:
-            if root_dict['hash'] not in new_dict_root:
-                new_dict['root'].append(root_dict)
-                new_dict_root.add(root_dict['hash'])
-
+        for root_dict in lockfile_as_dict["roots"]:
+            if root_dict["hash"] not in new_dict_root:
+                new_dict["root"].append(root_dict)
+                new_dict_root.add(root_dict["hash"])
 
         # print("---NEW DICT---")
         # print(new_dict)
         # print("---------------\n")
 
-
         # CONCRETE
         # print("concrete_specs:", lockfile_as_dict['concrete_specs'])
         # print("---------------\n\n")
-
 
     # have one enty for each root in each env
     # merge multiple dictionarys? (update)
