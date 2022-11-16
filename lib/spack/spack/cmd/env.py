@@ -742,8 +742,11 @@ def env_combine(args):
         tty.die("'%s': environment already exists" % name)
 
     new_dict = dict()
+    new_dict["_meta"] = dict()
     new_dict["root"] = []
-    new_dict_root = set()
+    new_dict["concrete_specs"] = dict()
+
+    new_dict_roots = set()
     lockfile_meta = None
 
     for old_env_name in args.environments:
@@ -763,6 +766,7 @@ def env_combine(args):
 
         if lockfile_meta is None:
             lockfile_meta = lockfile_as_dict["_meta"]
+            new_dict["_meta"] = lockfile_meta
         elif lockfile_meta != lockfile_as_dict["_meta"]:
             tty.die("All lockfile _meta values must match")
 
@@ -771,22 +775,26 @@ def env_combine(args):
 
         # Copy roots to new dictionary
         for root_dict in lockfile_as_dict["roots"]:
-            if root_dict["hash"] not in new_dict_root:
+            if root_dict["hash"] not in new_dict_roots:
                 new_dict["root"].append(root_dict)
-                new_dict_root.add(root_dict["hash"])
+                new_dict_roots.add(root_dict["hash"])
 
         # print("---NEW DICT---")
         # print(new_dict)
         # print("---------------\n")
 
-        # CONCRETE
-        # print("concrete_specs:", lockfile_as_dict['concrete_specs'])
-        # print("---------------\n\n")
+        # Copy concrete specs to new dictonary
+        # TODO: Figure out conflicts of having the same package with different specs
+        for key_specs, value in lockfile_as_dict['concrete_specs'].items():
+            if key_specs not in new_dict["concrete_specs"]:
+                new_dict["concrete_specs"][key_specs] = value
 
-    # have one enty for each root in each env
-    # merge multiple dictionarys? (update)
+        # print("---NEW DICT---")
+        # print(new_dict)
+        # print("---------------\n")
 
-    # create new env
+    # turn dict into lock file
+    # create new env with new lock file
     # put concretized specs in new env _to_lockfile_dict()
     return True
 
