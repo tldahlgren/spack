@@ -785,7 +785,7 @@ def env_combine(args):
 
         # Copy concrete specs to new dictonary
         # TODO: Figure out conflicts of having the same package with different specs
-        for key_specs, value in lockfile_as_dict['concrete_specs'].items():
+        for key_specs, value in lockfile_as_dict["concrete_specs"].items():
             if key_specs not in new_dict["concrete_specs"]:
                 new_dict["concrete_specs"][key_specs] = value
 
