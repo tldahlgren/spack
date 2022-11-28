@@ -789,14 +789,19 @@ def env_combine(args):
             if key_specs not in new_dict["concrete_specs"]:
                 new_dict["concrete_specs"][key_specs] = value
 
-        # print("---NEW DICT---")
-        # print(new_dict)
-        # print("---------------\n")
+    # create new environment
+    _env_create(name)
+
+    # add root specs to new_env's spack.yaml
+    # concretize new environment
+
+    # print("---NEW DICT---")
+    # print(new_dict)
+    # print("---------------\n")
 
     # turn dict into lock file
     # create new env with new lock file
     # put concretized specs in new env _to_lockfile_dict()
-    return True
 
 
 #: Dictionary mapping subcommand names and aliases to functions
