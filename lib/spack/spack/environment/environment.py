@@ -107,8 +107,14 @@ def check_disallowed_env_config_mods(scopes):
     return scopes
 
 
-def default_manifest_yaml():
+def default_manifest_yaml(include_concrete: [str]): # Rikki add include_concrete parameter???
     """default spack.yaml file to put in new environments"""
+    concrete_env = ""
+    if include_concrete:
+        concrete_env = "\n  include_concrete:"
+        for env in include_concrete:
+            concrete_env += "\n  - {0}".format(env)
+
     return """\
 # This is a Spack Environment file.
 #
@@ -119,9 +125,10 @@ spack:
   specs: []
   view: true
   concretizer:
-    unify: {}
+    unify: {0}{1}
 """.format(
-        "true" if spack.config.get("concretizer:unify") else "false"
+        "true" if spack.config.get("concretizer:unify") else "false",
+        concrete_env
     )
 
 
@@ -417,6 +424,14 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
+    #=======
+    #def create(name, init_file=None, with_view=None, keep_relative=False, include_concrete=None):
+    #    """Create a named environment in Spack."""
+    #    validate_env_name(name)
+    #    if exists(name):
+    #        raise SpackEnvironmentError("'%s': environment already exists" % name)
+    #    return Environment(root(name), init_file, with_view, keep_relative, include_concrete)
+    #>>>>>>> eca33289ba (Design Update)
 
 
 def ensure_included_envs_exist(include_concrete: List[str]) -> None:
@@ -836,7 +851,7 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(self, manifest_dir: Union[str, pathlib.Path]) -> None:
+    def __init__(self, manifest_dir: Union[str, pathlib.Path], include_concrete: [str] = None) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -846,6 +861,8 @@ class Environment:
         self.path = os.path.abspath(str(manifest_dir))
 
         self.txlock = lk.Lock(self._transaction_lock_path)
+
+        self.include_concrete = include_concrete
 
         self.unify = None
         self.new_specs: List[Spec] = []
@@ -2938,7 +2955,7 @@ def no_active_environment():
 
 
 def initialize_environment_dir(
-    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]]
+    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]], include_concrete: [str]
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
