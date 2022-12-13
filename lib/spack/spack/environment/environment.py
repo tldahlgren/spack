@@ -1160,7 +1160,6 @@ class Environment:
         # load paths to environment via 'include_concrete'
         include_concretes = config_dict(self.yaml).get("include_concrete", [])
 
-
         new_dict = dict()
         new_dict["_meta"] = dict()
         new_dict["root"] = []
@@ -1177,14 +1176,12 @@ class Environment:
             if not exists(env_name):
                 tty.die("'%s': unable to find file" % env_name)
 
-
             old_env = Envinronment(root(env_name))
 
             # Concretize environment and generate spack.lock file
 
             # turn new_dict to json
             # concretize based off of the json
-
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
