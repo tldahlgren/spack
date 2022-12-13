@@ -107,8 +107,14 @@ def check_disallowed_env_config_mods(scopes):
     return scopes
 
 
-def default_manifest_yaml():
+def default_manifest_yaml(include_concrete: [str]): # Rikki add include_concrete parameter???
     """default spack.yaml file to put in new environments"""
+    concrete_env = ""
+    if include_concrete:
+        concrete_env = "\n  include_concrete:"
+        for env in include_concrete:
+            concrete_env += "\n  - {0}".format(env)
+
     return """\
 # This is a Spack Environment file.
 #
@@ -119,9 +125,10 @@ spack:
   specs: []
   view: true
   concretizer:
-    unify: {}
+    unify: {0}{1}
 """.format(
-        "true" if spack.config.get("concretizer:unify") else "false"
+        "true" if spack.config.get("concretizer:unify") else "false",
+        concrete_env
     )
 
 
@@ -283,6 +290,7 @@ def create(
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
+    include_concrete: [str] = None,
 ) -> "Environment":
     """Create a managed environment in Spack and returns it.
 
@@ -302,8 +310,8 @@ def create(
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
-        environment_dir, init_file=init_file, with_view=with_view, keep_relative=keep_relative
-    )
+        environment_dir, init_file=init_file, with_view=with_view, keep_relative=keep_relative, include_concrete=include_concrete
+        )
 
 
 def create_in_dir(
@@ -311,6 +319,7 @@ def create_in_dir(
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
+    include_concrete: [str] = None,
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
@@ -324,6 +333,7 @@ def create_in_dir(
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
+        include_concrete: Rikki explain
     """
     initialize_environment_dir(root, envfile=init_file)
 
@@ -407,6 +417,14 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
+    #=======
+    #def create(name, init_file=None, with_view=None, keep_relative=False, include_concrete=None):
+    #    """Create a named environment in Spack."""
+    #    validate_env_name(name)
+    #    if exists(name):
+    #        raise SpackEnvironmentError("'%s': environment already exists" % name)
+    #    return Environment(root(name), init_file, with_view, keep_relative, include_concrete)
+    #>>>>>>> eca33289ba (Design Update)
 
 
 def all_environment_names():
@@ -772,7 +790,7 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(self, manifest_dir: Union[str, pathlib.Path]) -> None:
+    def __init__(self, manifest_dir: Union[str, pathlib.Path], include_concrete: [str] = None) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -783,10 +801,12 @@ class Environment:
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
-        self._unify = None
+
+        self.unify = None
         self.new_specs: List[Spec] = []
         self.new_installs: List[Spec] = []
         self.views: Dict[str, ViewDescriptor] = {}
+        self.include_concrete: List[str] = []
 
         #: Specs from "spack.yaml"
         self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
@@ -1129,6 +1149,142 @@ class Environment:
         return check_disallowed_env_config_mods(
             self.included_config_scopes() + [self.env_file_config_scope()]
         )
+
+    def included_concrete_config_scopes(self):
+        """List of included environments that will be linked
+
+        Absolute paths to the linked environments in order from highes
+        to lowerest precedence over later ones.
+        """
+
+        # load paths to environment via 'include_concrete'
+        include_concretes = config_dict(self.yaml).get("include_concrete", [])
+
+
+        new_dict = dict()
+        new_dict["_meta"] = dict()
+        new_dict["root"] = []
+        new_dict["concrete_specs"] = dict()
+
+        new_dict_roots = set()
+        lockfile_meta = None
+
+        # loop bckwards
+        for i, env_name in enumerate(reversed(include_concretes)):
+            print("number  :", i)
+            print("env name:", env_name)
+
+            if not exists(env_name):
+                tty.die("'%s': unable to find file" % env_name)
+
+
+            old_env = Envinronment(root(env_name))
+
+            # Concretize environment and generate spack.lock file
+
+            # turn new_dict to json
+            # concretize based off of the json
+
+
+    def included_config_scopes(self):
+        """List of included configuration scopes from the environment.
+
+        Scopes are listed in the YAML file in order from highest to
+        lowest precedence, so configuration from earlier scope will take
+        precedence over later ones.
+
+        This routine returns them in the order they should be pushed onto
+        the internal scope stack (so, in reverse, from lowest to highest).
+        """
+        scopes = []
+
+        # load config scopes added via 'include:', in reverse so that
+        # highest-precedence scopes are last.
+        includes = self.manifest[TOP_LEVEL_KEY].get("include", [])
+        missing = []
+        for i, config_path in enumerate(reversed(includes)):
+            # allow paths to contain spack config/environment variables, etc.
+            config_path = substitute_path_variables(config_path)
+
+            include_url = urllib.parse.urlparse(config_path)
+
+            # Transform file:// URLs to direct includes.
+            if include_url.scheme == "file":
+                config_path = urllib.request.url2pathname(include_url.path)
+
+            # Any other URL should be fetched.
+            elif include_url.scheme in ("http", "https", "ftp"):
+                # Stage any remote configuration file(s)
+                staged_configs = (
+                    os.listdir(self.config_stage_dir)
+                    if os.path.exists(self.config_stage_dir)
+                    else []
+                )
+                remote_path = urllib.request.url2pathname(include_url.path)
+                basename = os.path.basename(remote_path)
+                if basename in staged_configs:
+                    # Do NOT re-stage configuration files over existing
+                    # ones with the same name since there is a risk of
+                    # losing changes (e.g., from 'spack config update').
+                    tty.warn(
+                        "Will not re-stage configuration from {0} to avoid "
+                        "losing changes to the already staged file of the "
+                        "same name.".format(remote_path)
+                    )
+
+                    # Recognize the configuration stage directory
+                    # is flattened to ensure a single copy of each
+                    # configuration file.
+                    config_path = self.config_stage_dir
+                    if basename.endswith(".yaml"):
+                        config_path = os.path.join(config_path, basename)
+                else:
+                    staged_path = spack.config.fetch_remote_configs(
+                        config_path, self.config_stage_dir, skip_existing=True
+                    )
+                    if not staged_path:
+                        raise SpackEnvironmentError(
+                            "Unable to fetch remote configuration {0}".format(config_path)
+                        )
+                    config_path = staged_path
+
+            elif include_url.scheme:
+                raise ValueError(
+                    f"Unsupported URL scheme ({include_url.scheme}) for "
+                    f"environment include: {config_path}"
+                )
+
+            # treat relative paths as relative to the environment
+            if not os.path.isabs(config_path):
+                config_path = os.path.join(self.path, config_path)
+                config_path = os.path.normpath(os.path.realpath(config_path))
+
+            if os.path.isdir(config_path):
+                # directories are treated as regular ConfigScopes
+                config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
+                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
+                scope = spack.config.ConfigScope(config_name, config_path)
+            elif os.path.exists(config_path):
+                # files are assumed to be SingleFileScopes
+                config_name = "env:%s:%s" % (self.name, config_path)
+                tty.debug(
+                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
+                )
+                scope = spack.config.SingleFileScope(
+                    config_name, config_path, spack.schema.merged.schema
+                )
+            else:
+                missing.append(config_path)
+                continue
+
+            scopes.append(scope)
+
+        if missing:
+            msg = "Detected {0} missing include path(s):".format(len(missing))
+            msg += "\n   {0}".format("\n   ".join(missing))
+            raise spack.config.ConfigFileError(msg)
+
+        return scopes
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -2574,7 +2730,7 @@ def no_active_environment():
 
 
 def initialize_environment_dir(
-    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]]
+    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]], include_concrete: [str]
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
@@ -2608,7 +2764,8 @@ def initialize_environment_dir(
 
     if envfile is None:
         _ensure_env_dir()
-        target_manifest.write_text(default_manifest_yaml())
+        target_manifest.write_text(default_manifest_yaml(include_concrete))
+
         return
 
     envfile = pathlib.Path(envfile)
@@ -2645,7 +2802,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         This function also writes a spack.yaml file that is consistent with the spack.lock
         already existing in the directory.
-
         Args:
              manifest_dir: directory where the lockfile is
         """
