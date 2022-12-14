@@ -1160,14 +1160,6 @@ class Environment:
         # load paths to environment via 'include_concrete'
         include_concretes = config_dict(self.yaml).get("include_concrete", [])
 
-        new_dict = dict()
-        new_dict["_meta"] = dict()
-        new_dict["root"] = []
-        new_dict["concrete_specs"] = dict()
-
-        new_dict_roots = set()
-        lockfile_meta = None
-
         # loop bckwards
         for i, env_name in enumerate(reversed(include_concretes)):
             print("number  :", i)
@@ -1175,8 +1167,6 @@ class Environment:
 
             if not exists(env_name):
                 tty.die("'%s': unable to find file" % env_name)
-
-            old_env = Envinronment(root(env_name))
 
             # Concretize environment and generate spack.lock file
 
@@ -2311,7 +2301,7 @@ class Environment:
         """Read a lockfile from a file or from a raw string."""
         lockfile_dict = sjson.load(file_or_json)
         self._read_lockfile_dict(lockfile_dict)
-        return lockfile_dict
+        return lockfile_dict["_meta"]["lockfile-version"]
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
