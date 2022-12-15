@@ -1158,7 +1158,7 @@ class Environment:
         """
 
         # load paths to environment via 'include_concrete'
-        #include_concretes = config_dict(self.yaml).get("include_concrete", [])
+        # include_concretes = config_dict(self.yaml).get("include_concrete", [])
 
         # loop bckwards
         include_path = []
@@ -1173,7 +1173,6 @@ class Environment:
         # Concretize environment and generate spack.lock file
 
         return include_path
-
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
