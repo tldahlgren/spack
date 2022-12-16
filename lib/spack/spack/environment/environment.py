@@ -1153,7 +1153,7 @@ class Environment:
     def included_concrete_config_scopes(self):
         """List of included environments that will be linked
 
-        Absolute paths to the linked environments in order from highes
+        Absolute paths to the linked environments in order from highest
         to lowerest precedence over later ones.
         """
 
@@ -1170,7 +1170,11 @@ class Environment:
 
             include_path.append(root(env_name))
 
-        # Concretize environment and generate spack.lock file
+            env = Environment(root(env_name))
+            env.concretize(force=False)
+            env.write()
+
+            # Link to each environment
 
         return include_path
 
