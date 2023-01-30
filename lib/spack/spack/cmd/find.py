@@ -250,10 +250,21 @@ def find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
 
+    # print("results:", results)
+    # print("args:", args)
+
     env = ev.active_environment()
     decorator = lambda s, f: f
     if env:
         decorator, _, roots, _ = setup_env(env)
+
+    # print("env:", env.name)
+    # print("env.path:", env.path)
+    # print("include_concrete:", env.include_concrete)
+    # print("icnluded_specs:", env.included_specs())
+
+    # for spec in env.included_specs():
+    #     print("spec:", spec)
 
     # use groups by default except with format.
     if args.groups is None:

@@ -1150,7 +1150,7 @@ class Environment:
             self.included_config_scopes() + [self.env_file_config_scope()]
         )
 
-    def included_concrete_config_scopes(self):
+    def included_concrete_envs(self):
         """List of included environments that will be linked
 
         Absolute paths to the linked environments in order from highest
@@ -1163,7 +1163,6 @@ class Environment:
         # loop bckwards
         include_path = []
         for env_name in self.include_concrete:
-            print("env name:", env_name)
 
             if not exists(env_name):
                 tty.die("'%s': unable to find file" % env_name)
@@ -1174,9 +1173,29 @@ class Environment:
             env.concretize(force=False)
             env.write()
 
-            # Link to each environment
-
         return include_path
+
+    def include_concrete_specs(self):
+        root_hash = set()
+        lockfile_meta = None
+        self.included_specs = list()
+
+        for env_name in self.include_concrete:
+
+            env = Environment(root(env_name))
+
+            with open(env.lock_path) as f:
+                lockfile_as_dict = env._read_lockfile(f)
+
+            if lockfile_meta is None:
+                lockfile_meta = lockfile_as_dict["_meta"]
+            elif lockfile_meta != lockfile_as_dict["_meta"]:
+                tty.die("All lockfile _meta values must match")
+
+            for root_dict in lockfile_as_dict["roots"]:
+                if root_dict["hash"] not in root_hash:
+                    self.included_specs.append(root_dict["spec"])
+                root_hash.add(root_dict["hash"])
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
@@ -2306,7 +2325,7 @@ class Environment:
         """Read a lockfile from a file or from a raw string."""
         lockfile_dict = sjson.load(file_or_json)
         self._read_lockfile_dict(lockfile_dict)
-        return lockfile_dict["_meta"]["lockfile-version"]
+        return lockfile_dict#["_meta"]["lockfile-version"]
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
