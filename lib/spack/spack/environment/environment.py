@@ -914,6 +914,11 @@ class Environment:
         else:
             self.views = {}
 
+        # Extract and process include_concrete
+        # Grab include_concrete from yaml
+        # Grabs specs and put in memory (backwards!)
+        if self.include_concrete:
+            self.include_concrete_specs()
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
@@ -1195,7 +1200,7 @@ class Environment:
             for root_dict in lockfile_as_dict["roots"]:
                 if root_dict["hash"] not in root_hash:
                     self.included_specs.append(root_dict["spec"])
-                root_hash.add(root_dict["hash"])
+                    root_hash.add(root_dict["hash"])
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.

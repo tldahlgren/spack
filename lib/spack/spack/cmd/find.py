@@ -257,11 +257,13 @@ def find(parser, args):
     decorator = lambda s, f: f
     if env:
         decorator, _, roots, _ = setup_env(env)
+        # print("env.get_include_specs()", env.get_included_specs())
+        # roots.extend(env.get_include_specs())
 
     # print("env:", env.name)
     # print("env.path:", env.path)
     # print("include_concrete:", env.include_concrete)
-    # print("icnluded_specs:", env.included_specs())
+    # print("icnluded_specs:", env.included_specs)
 
     # for spec in env.included_specs():
     #     print("spec:", spec)
