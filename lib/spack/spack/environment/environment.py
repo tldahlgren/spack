@@ -1161,8 +1161,7 @@ class Environment:
         )
 
     def include_concrete_envs(self):
-        """ Write something
-        """
+        """Write something"""
 
         include_path = []
         for env_name in self.include_concrete:
@@ -1170,7 +1169,7 @@ class Environment:
             if os.sep in env_name:
                 env_path = env_name
             elif exists(env_name):
-                env_path = (root(env_name))
+                env_path = root(env_name)
             else:
                 tty.die("'%s': unable to find env" % env_name)
 
@@ -1186,8 +1185,7 @@ class Environment:
         return include_path
 
     def include_concrete_specs(self):
-        """ Write something
-        """
+        """Write something"""
         root_hash = set()
         lockfile_meta = None
         self.included_specs = SpecList()
