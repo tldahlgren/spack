@@ -155,6 +155,8 @@ user_speclist_name = "specs"
 default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
+# The name for any included concrete specs
+included_concrete_name = "include_concrete"
 
 
 def installed_specs():
@@ -917,7 +919,10 @@ class Environment:
         # Extract and process include_concrete
         # Grab include_concrete from yaml
         # Grabs specs and put in memory (backwards!)
+        if not self.include_concrete:
+            self.include_concrete = config_dict(self.yaml).get(included_concrete_name, [])
         if self.include_concrete:
+            self.include_concrete_envs()
             self.include_concrete_specs()
     @property
     def user_specs(self):
@@ -1155,39 +1160,44 @@ class Environment:
             self.included_config_scopes() + [self.env_file_config_scope()]
         )
 
-    def included_concrete_envs(self):
-        """List of included environments that will be linked
-
-        Absolute paths to the linked environments in order from highest
-        to lowerest precedence over later ones.
+    def include_concrete_envs(self):
+        """ Write something
         """
 
-        # load paths to environment via 'include_concrete'
-        # include_concretes = config_dict(self.yaml).get("include_concrete", [])
-
-        # loop bckwards
         include_path = []
         for env_name in self.include_concrete:
 
-            if not exists(env_name):
-                tty.die("'%s': unable to find file" % env_name)
+            if os.sep in env_name:
+                env_path = env_name
+            elif exists(env_name):
+                env_path = (root(env_name))
+            else:
+                tty.die("'%s': unable to find env" % env_name)
 
-            include_path.append(root(env_name))
+            if not is_env_dir(env_path):
+                tty.die("'%s': unable to find env path" % env_path)
 
-            env = Environment(root(env_name))
+            include_path.append(env_path)
+
+            env = Environment(env_path)
             env.concretize(force=False)
             env.write()
 
         return include_path
 
     def include_concrete_specs(self):
+        """ Write something
+        """
         root_hash = set()
         lockfile_meta = None
-        self.included_specs = list()
+        self.included_specs = SpecList()
 
         for env_name in self.include_concrete:
 
-            env = Environment(root(env_name))
+            if os.sep in env_name:
+                env = Environment(env_name)
+            else:
+                env = Environment(root(env_name))
 
             with open(env.lock_path) as f:
                 lockfile_as_dict = env._read_lockfile(f)
@@ -1199,7 +1209,7 @@ class Environment:
 
             for root_dict in lockfile_as_dict["roots"]:
                 if root_dict["hash"] not in root_hash:
-                    self.included_specs.append(root_dict["spec"])
+                    self.included_specs.add(root_dict["spec"])
                     root_hash.add(root_dict["hash"])
 
     def included_config_scopes(self):
@@ -2330,7 +2340,7 @@ class Environment:
         """Read a lockfile from a file or from a raw string."""
         lockfile_dict = sjson.load(file_or_json)
         self._read_lockfile_dict(lockfile_dict)
-        return lockfile_dict#["_meta"]["lockfile-version"]
+        return lockfile_dict
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""

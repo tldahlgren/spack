@@ -234,6 +234,27 @@ def display_env(env, args, decorator, results):
         )
         print()
 
+    if env.included_concrete_specs:
+        tty.msg("Included specs")
+
+        # Root specs cannot be displayed with prefixes, since those are not
+        # set for abstract specs. Same for hashes
+        root_args = copy.copy(args)
+        root_args.paths = False
+
+        # Roots are displayed with variants, etc. so that we can see
+        # specifically what the user asked for.
+        cmd.display_specs(
+            env.included_concrete_specs,
+            root_args,
+            decorator=lambda s, f: color.colorize("@*{%s}" % f),
+            namespace=True,
+            show_flags=True,
+            show_full_compiler=True,
+            variants=True,
+        )
+        print()
+
     if args.show_concretized:
         tty.msg("Concretized roots")
         cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
@@ -250,23 +271,10 @@ def find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
 
-    # print("results:", results)
-    # print("args:", args)
-
     env = ev.active_environment()
     decorator = lambda s, f: f
     if env:
         decorator, _, roots, _ = setup_env(env)
-        # print("env.get_include_specs()", env.get_included_specs())
-        # roots.extend(env.get_include_specs())
-
-    # print("env:", env.name)
-    # print("env.path:", env.path)
-    # print("include_concrete:", env.include_concrete)
-    # print("icnluded_specs:", env.included_specs)
-
-    # for spec in env.included_specs():
-    #     print("spec:", spec)
 
     # use groups by default except with format.
     if args.groups is None:
