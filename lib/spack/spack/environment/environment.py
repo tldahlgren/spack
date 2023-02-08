@@ -1682,8 +1682,8 @@ class Environment:
         import spack.bootstrap
 
         # keep any concretized specs whose user specs are still in the manifest
-        old_concretized_user_specs = self.concretized_user_specs
-        old_concretized_order = self.concretized_order
+        old_concretized_user_specs = self.all_root_specs()
+        old_concretized_order = self.all_root_hashes()
         old_specs_by_hash = self.specs_by_hash
 
         self.concretized_user_specs = []
@@ -1694,6 +1694,9 @@ class Environment:
             if s in self.user_specs:
                 concrete = old_specs_by_hash[h]
                 self._add_concrete_spec(s, concrete, new=False)
+            elif s in self.included_specs:
+                concrete = old_specs_by_hash[h]
+                self._add_included_concrete_spec(s, concrete, new=False)
 
         # Concretize any new user specs that we haven't concretized yet
         args, root_specs, i = [], [], 0
@@ -2299,6 +2302,7 @@ class Environment:
         If these specs appear under different user_specs, only one copy
         is added to the list returned.
         """
+
         specs = [self.specs_by_hash[h] for h in self.all_root_hashes()]
 
         if recurse_dependencies:
