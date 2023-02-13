@@ -234,7 +234,7 @@ def display_env(env, args, decorator, results):
         )
         print()
 
-    if env.included_concrete_specs:
+    if env.include_concrete:
         tty.msg("Included specs")
 
         # Root specs cannot be displayed with prefixes, since those are not
@@ -245,7 +245,7 @@ def display_env(env, args, decorator, results):
         # Roots are displayed with variants, etc. so that we can see
         # specifically what the user asked for.
         cmd.display_specs(
-            env.included_concrete_specs,
+            env.included_specs,
             root_args,
             decorator=lambda s, f: color.colorize("@*{%s}" % f),
             namespace=True,

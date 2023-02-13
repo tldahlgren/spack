@@ -1189,8 +1189,7 @@ class Environment:
         root_hash = set()
         concrete_hash = set()
         lockfile_meta = None
-        self.included_specs = SpecList()
-        self.included_concrete_info = dict()
+        self.included_concrete_specs = dict()
 
         for env_name in self.include_concrete:
 
@@ -1211,17 +1210,16 @@ class Environment:
                 tty.die("All lockfile _meta values must match")
 
             # Copy unique root specs from env
-            self.included_concrete_info[env_path] = {"roots": []}
+            self.included_concrete_specs[env_path] = {"roots": []}
             for root_dict in lockfile_as_dict["roots"]:
                 if root_dict["hash"] not in root_hash:
-                    self.included_concrete_info[env_path]["roots"].append(root_dict)
-                    self.included_specs.add(root_dict["spec"])
+                    self.included_concrete_specs[env_path]["roots"].append(root_dict)
                     root_hash.add(root_dict["hash"])
 
             # Copy unique concrete specs from env
             for concrete_spec in lockfile_as_dict["concrete_specs"]:
                 if concrete_spec not in concrete_hash:
-                    self.included_concrete_info[env_path].update(
+                    self.included_concrete_specs[env_path].update(
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
                     concrete_hash.add(concrete_spec)
@@ -2349,7 +2347,7 @@ class Environment:
         }
 
         if self.include_concrete:
-            data.update({"include": self.included_concrete_info})
+            data.update({"include": self.included_concrete_specs})
 
         return data
 
@@ -2367,6 +2365,12 @@ class Environment:
         self.concretized_user_specs = [Spec(r["spec"]) for r in roots]
         self.concretized_order = [r["hash"] for r in roots]
         json_specs_by_hash = d["concrete_specs"]
+
+        if "include" in d:
+            for not_needed, env_info in d["include"].items():
+                for root_list in env_info["roots"]:
+                    self.concretized_order.append(root_list["hash"])
+                json_specs_by_hash.update(env_info["concrete_specs"])
 
         # Track specs by their lockfile key.  Currently spack uses the finest
         # grained hash as the lockfile key, while older formats used the build
@@ -2410,6 +2414,7 @@ class Environment:
         # keep.  This is only required as long as we support older lockfile
         # formats where the mapping from DAG hash to lockfile key is possibly
         # one-to-many.
+
         for lockfile_key in self.concretized_order:
             for s in specs_by_hash[lockfile_key].traverse():
                 if s.dag_hash() not in first_seen:
