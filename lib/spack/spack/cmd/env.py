@@ -418,7 +418,8 @@ def env_remove(args):
 
     # print("env.is_included", env.is_included)
     # if env.is_included:
-    #     tty.die("Will not remove environment \"%s\" because it is linked to environment \"%s\"" % (env_name, env.is_included))
+    #     tty.die("Will not remove environment \"%s\" +
+    #             "because it is linked to environment \"%s\"" % (env_name, env.is_included))
 
     if not args.yes_to_all:
         environments = string.plural(len(args.rm_env), "environment", show_n=False)

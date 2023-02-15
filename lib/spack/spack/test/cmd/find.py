@@ -347,6 +347,9 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
+# ADD TEST FOR SPACK FIND IN ENV WITH --INCLUDE-CONCRETE
+
+
 def test_find_loaded(database, working_env):
     output = find("--loaded", "--group")
     assert output == ""

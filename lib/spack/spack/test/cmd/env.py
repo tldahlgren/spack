@@ -247,6 +247,9 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
 
 
+# ADD TEST FOR INSTALLING INCLUDED SPECS
+
+
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand("install")
     install("dependent-install")
@@ -447,6 +450,9 @@ def test_remove_command():
         assert "mpileaks@" not in find()
         # now the lockfile is regenerated and it's gone.
         assert "mpileaks@" not in find("--show-concretized")
+
+
+# ADD ERROR REMOVING LINKED ENV
 
 
 def test_environment_status(capsys, tmpdir):
@@ -1420,6 +1426,15 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     # After enabling the view, the specs should be linked into the environment
     # view dir
     check_mpileaks_and_deps_in_view(view_dir)
+
+
+# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV NAME
+
+
+# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV PATH
+
+
+# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH NONEXISTANT ENV (ERROR)
 
 
 def test_env_config_view_default(
