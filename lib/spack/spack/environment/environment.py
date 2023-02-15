@@ -921,6 +921,7 @@ class Environment:
         # Grabs specs and put in memory (backwards!)
         if not self.include_concrete:
             self.include_concrete = config_dict(self.yaml).get(included_concrete_name, [])
+
         if self.include_concrete:
             self.include_concrete_envs()
             self.include_concrete_specs()
@@ -1179,6 +1180,8 @@ class Environment:
             include_path.append(env_path)
 
             env = Environment(env_path)
+            # Remove later if I cannot get this working
+            env.is_included = True #.append(self.name)
             env.concretize(force=False)
             env.write()
 
@@ -1186,6 +1189,7 @@ class Environment:
 
     def include_concrete_specs(self):
         """Write something"""
+
         root_hash = set()
         concrete_hash = set()
         lockfile_meta = None
