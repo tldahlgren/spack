@@ -1181,7 +1181,7 @@ class Environment:
 
             env = Environment(env_path)
             # Remove later if I cannot get this working
-            env.is_included = True #.append(self.name)
+            env.is_included = True  # .append(self.name)
             env.concretize(force=False)
             env.write()
 

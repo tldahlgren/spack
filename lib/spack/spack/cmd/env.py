@@ -411,7 +411,10 @@ def env_remove(args):
         # if env has include_concrete and root(env_name) is there
         if ev.root(env_name) in eviron.include_concrete:
             # Die: cannot remove env since it is linked to -- env
-            tty.die("Will not remove environment \"%s\" because it is linked to environment \"%s\"" % (env_name, name))
+            tty.die(
+                'Will not remove environment "%s" because it is linked to environment "%s"'
+                % (env_name, name)
+            )
 
     # print("env.is_included", env.is_included)
     # if env.is_included:
