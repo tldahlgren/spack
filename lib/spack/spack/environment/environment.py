@@ -922,9 +922,25 @@ class Environment:
         if not self.include_concrete:
             self.include_concrete = config_dict(self.yaml).get(included_concrete_name, [])
 
-        if self.include_concrete:
-            self.include_concrete_envs()
-            self.include_concrete_specs()
+        try:
+            if self.include_concrete:
+                self.include_concrete_envs()
+                self.include_concrete_specs()
+        except:
+            raise SpackEnvironmentError("SOMETHING")
+
+        # Retrieve unification scheme for the concretizer
+        self.unify = spack.config.get("concretizer:unify", False)
+
+        # Retrieve dev-build packages:
+        self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
+        for name, entry in self.dev_specs.items():
+            # spec must include a concrete version
+            assert Spec(entry["spec"]).versions.concrete_range_as_version
+            # default path is the spec name
+            if "path" not in entry:
+                self.dev_specs[name]["path"] = name
+
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
@@ -1172,16 +1188,14 @@ class Environment:
             elif exists(env_name):
                 env_path = root(env_name)
             else:
-                tty.die("'%s': unable to find env" % env_name)
+                raise SpackEnvironmentError("'%s': unable to find env" % env_name)
 
             if not is_env_dir(env_path):
-                tty.die("'%s': unable to find env path" % env_path)
+                raise SpackEnvironmentError("'%s': unable to find env path" % env_path)
 
             include_path.append(env_path)
 
             env = Environment(env_path)
-            # Remove later if I cannot get this working
-            env.is_included = True  # .append(self.name)
             env.concretize(force=False)
             env.write()
 
