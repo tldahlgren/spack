@@ -389,7 +389,10 @@ def env_remove_setup_parser(subparser):
     subparser.add_argument("rm_env", metavar="env", nargs="+", help="environment(s) to remove")
     arguments.add_common_arguments(subparser, ["yes_to_all"])
     subparser.add_argument(
-        "-f", "--force", action="store_true", help="forcfully remove environment"
+        "-f",
+        "--force",
+        action="store_true",
+        help="fix --> forcfully remove environment",
     )
 
 
@@ -413,9 +416,15 @@ def env_remove(args):
         eviron = ev.Environment(ev.root(name))
         if ev.root(env_name) in eviron.include_concrete:
             if args.force:
-                tty.warn('Environment "%s" is being used by environment "%s"' % (env_name, name))
+                tty.warn(
+                    'Environment "%s" is being used by environment "%s"'
+                    % (env_name, name)
+                )
             else:
-                tty.die('Environment "%s" is being used by environment "%s"' % (env_name, name))
+                tty.die(
+                    'Environment "%s" is being used by environment "%s"'
+                    % (env_name, name)
+                )
 
     if not args.yes_to_all:
         environments = string.plural(len(args.rm_env), "environment", show_n=False)
