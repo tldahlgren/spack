@@ -925,8 +925,8 @@ class Environment:
         try:
             if self.include_concrete:
                 self.include_concrete_envs()
-                self.include_concrete_specs()
         except:
+            # TODO Rikki: Write error explination
             raise SpackEnvironmentError("SOMETHING")
 
         # Retrieve unification scheme for the concretizer
@@ -940,6 +940,9 @@ class Environment:
             # default path is the spec name
             if "path" not in entry:
                 self.dev_specs[name]["path"] = name
+
+    def all_root_specs(self):
+        return self.concretized_order + self.included_concretized_order
 
     @property
     def user_specs(self):
@@ -977,6 +980,9 @@ class Environment:
         self.spec_lists[user_speclist_name] = SpecList()
 
         self._dev_specs = {}
+        self.included_concretized_order = []
+        self.included_concretized_user_specs = []
+        self.included_specs_by_hash = {}
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
@@ -1178,9 +1184,14 @@ class Environment:
         )
 
     def include_concrete_envs(self):
-        """Write something"""
+        # TODO Rikki: Explain method
+        """Write Something"""
 
-        include_path = []
+        root_hash = set()
+        concrete_hash = set()
+        lockfile_meta = None
+        self.included_concrete_specs = dict()
+
         for env_name in self.include_concrete:
 
             if os.sep in env_name:
@@ -1193,30 +1204,9 @@ class Environment:
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError("'%s': unable to find env path" % env_path)
 
-            include_path.append(env_path)
-
             env = Environment(env_path)
             env.concretize(force=False)
             env.write()
-
-        return include_path
-
-    def include_concrete_specs(self):
-        """Write something"""
-
-        root_hash = set()
-        concrete_hash = set()
-        lockfile_meta = None
-        self.included_concrete_specs = dict()
-
-        for env_name in self.include_concrete:
-
-            if os.sep in env_name:
-                env_path = env_name
-            else:
-                env_path = root(env_name)
-
-            env = Environment(env_path)
 
             with open(env.lock_path) as f:
                 lockfile_as_dict = env._read_lockfile(f)
@@ -1508,6 +1498,7 @@ class Environment:
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
+                # Rikki del included ones too
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -2067,7 +2058,7 @@ class Environment:
         of per spec."""
         installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
-            for concretized_hash in self.concretized_order:
+            for concretized_hash in self.all_root_specs():
                 spec = self.specs_by_hash[concretized_hash]
                 if not spec.installed or (
                     spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
@@ -2365,7 +2356,7 @@ class Environment:
         }
 
         if self.include_concrete:
-            data.update({"include": self.included_concrete_specs})
+            data["include"] = self.included_concrete_specs
 
         return data
 
@@ -2378,26 +2369,20 @@ class Environment:
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
         self.specs_by_hash = {}
+        self.included_specs_by_hash = {}
 
         roots = d["roots"]
         self.concretized_user_specs = [Spec(r["spec"]) for r in roots]
         self.concretized_order = [r["hash"] for r in roots]
         json_specs_by_hash = d["concrete_specs"]
+        included_json_specs_by_hash = {}
 
         if "include" in d:
-            for not_needed, env_info in d["include"].items():
+            for env_name, env_info in d["include"].items():
                 for root_list in env_info["roots"]:
-                    self.concretized_order.append(root_list["hash"])
-                json_specs_by_hash.update(env_info["concrete_specs"])
+                    self.included_concretized_order.append(root_list["hash"])
+                included_json_specs_by_hash.update(env_info["concrete_specs"])
 
-        # Track specs by their lockfile key.  Currently spack uses the finest
-        # grained hash as the lockfile key, while older formats used the build
-        # hash or a previous incarnation of the DAG hash (one that did not
-        # include build deps or package hash).
-        specs_by_hash = {}
-
-        # Track specs by their DAG hash, allows handling DAG hash collisions
-        first_seen = {}
         current_lockfile_format = d["_meta"]["lockfile-version"]
         try:
             reader = READER_CLS[current_lockfile_format]
@@ -2409,6 +2394,24 @@ class Environment:
             if lockfile_format_version < current_lockfile_format:
                 msg += " You need to use a newer Spack version."
             raise SpackEnvironmentError(msg)
+
+        first_seen = self.filter_specs(reader, json_specs_by_hash, self.concretized_order)
+        for spec_dag_hash in self.concretized_order:
+            self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+
+        first_seen = self.filter_specs(reader, included_json_specs_by_hash, self.included_concretized_order)
+        for spec_dag_hash in self.included_concretized_order:
+            self.included_specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+
+    def filter_specs(self, reader, json_specs_by_hash, order_concretized):
+        # Track specs by their lockfile key.  Currently spack uses the finest
+        # grained hash as the lockfile key, while older formats used the build
+        # hash or a previous incarnation of the DAG hash (one that did not
+        # include build deps or package hash).
+        specs_by_hash = {}
+
+        # Track specs by their DAG hash, allows handling DAG hash collisions
+        first_seen = {}
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
@@ -2433,7 +2436,7 @@ class Environment:
         # formats where the mapping from DAG hash to lockfile key is possibly
         # one-to-many.
 
-        for lockfile_key in self.concretized_order:
+        for lockfile_key in order_concretized:
             for s in specs_by_hash[lockfile_key].traverse():
                 if s.dag_hash() not in first_seen:
                     first_seen[s.dag_hash()] = s
@@ -2441,12 +2444,11 @@ class Environment:
         # Now make sure concretized_order and our internal specs dict
         # contains the keys used by modern spack (i.e. the dag_hash
         # that includes build deps and package hash).
-        self.concretized_order = [
-            specs_by_hash[h_key].dag_hash() for h_key in self.concretized_order
+        order_concretized = [
+            specs_by_hash[h_key].dag_hash() for h_key in order_concretized
         ]
 
-        for spec_dag_hash in self.concretized_order:
-            self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+        return first_seen
 
     def write(self, regenerate: bool = True) -> None:
         """Writes an in-memory environment to its location on disk.
