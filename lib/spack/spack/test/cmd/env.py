@@ -1480,7 +1480,6 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-<<<<<<< HEAD
 def test_env_include_concrete_env_yaml():
     env("create", "test")
     test = ev.read("test")
@@ -1578,18 +1577,6 @@ def test_env_include_concrete_env_reconcretized(tmpdir):
     with test2:
         add("libelf")
     test2.concretize()
-=======
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV NAME
-def test_env_include_concrete_env(tmpdir, mock_stage):
-    # Words
-    e1 = ev.create("test")
-    e1.add("mpileaks")
-
-    env = ev.create("--include-concrete", "test", "include_test")
-
-    # assert "include_concrete" is in yaml file
-    # assert path to test env is under "include_concrete"
->>>>>>> 3d6fbf6d8b (Add forced removal, start writing test)
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
     combined = ev.read("combined_env")
@@ -1597,53 +1584,16 @@ def test_env_include_concrete_env(tmpdir, mock_stage):
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-<<<<<<< HEAD
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
-=======
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV PATH
-def test_env_include_concrete_env_path(tmpdir, mock_stage):
-    # Words
-    e1 = ev.create("test")
-    e1.add("mpileaks")
-
-    env = ev.create("--include-concrete", ev.root(e1), "include_test")
-
-    # assert "include_concrete" is in yaml file
-    # assert path to test env is under "include_concrete"
->>>>>>> 3d6fbf6d8b (Add forced removal, start writing test)
 
     # Re-concretize, roots and concrete_specs should still be empty
     combined.concretize()
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-<<<<<<< HEAD
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
-=======
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH NONEXISTANT ENV (ERROR)
-def test_env_include_nonexistant_concrete_env(tmpdir, mock_stage):
-    # Words
-    ev.create("--include-concrete", "test", "include_test")
-        # Should cause error
-
-
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH MULTIPLE ENVS
-def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
-    # Words
-    e1 = ev.create("test1")
-    e1.add("mpileaks@2.1")
-
-    e2 = ev.create("test2")
-    e2.add("mpileaks@2.2")
-
-    env = ev.create("--include-concrete", "test1", "--include-concrete", "test2", "include_test")
-
-    # assert "include_concrete" is in yaml file
-    # assert path to test1 env is under "include_concrete" in position 0
-    # assert path to test2 env is under "include_concrete" in position 1
->>>>>>> 3d6fbf6d8b (Add forced removal, start writing test)
 
 
 # TEST INSTALL INCLUDED SPECS

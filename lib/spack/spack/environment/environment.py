@@ -1489,6 +1489,7 @@ class Environment:
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
+                # Rikki del included ones too
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -2364,6 +2365,7 @@ class Environment:
         """Read a lockfile dictionary into this environment."""
         self.specs_by_hash = {}
         self.included_concretized_user_specs = []
+        self.included_specs_by_hash = {}
 
         roots = d["roots"]
         self.concretized_user_specs = [Spec(r["spec"]) for r in roots]
