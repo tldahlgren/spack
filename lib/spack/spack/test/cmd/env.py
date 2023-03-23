@@ -1456,7 +1456,7 @@ def test_env_include_concrete_env_path(tmpdir, mock_stage):
 def test_env_include_nonexistant_concrete_env(tmpdir, mock_stage):
     # Words
     ev.create("--include-concrete", "test", "include_test")
-        # Should cause error
+    # Should cause error
 
 
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH MULTIPLE ENVS
