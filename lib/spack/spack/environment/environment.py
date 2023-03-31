@@ -979,6 +979,10 @@ class Environment:
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
+        self.included_concretized_user_specs = []  # user specs from last concretize's included env
+        #TODO: Rikki, make self.included_concretized_order a dict for debugging purposes
+        self.included_concretized_order = []  # roots of the included envs, in order
+        self.included_specs_by_hash = {} # concretized specs by hash from the included envs
         self._previous_active = None  # previously active environment
         if not re_read:
             # things that cannot be recreated from file
@@ -1185,6 +1189,9 @@ class Environment:
         concrete_hash = set()
 
         for env_name in self.include_concrete:
+            root_hash = set()
+            concrete_hash = set()
+
             if os.sep in env_name:
                 env_path = env_name
             elif exists(env_name):
@@ -1443,7 +1450,6 @@ class Environment:
         except KeyError as e:
             msg = f"{err_msg_header}, since '{list_name}' does not exist"
             raise SpackEnvironmentError(msg) from e
-
         if not query_spec.concrete:
             matches = [s for s in list_to_change if s.satisfies(query_spec)]
 
@@ -1489,7 +1495,6 @@ class Environment:
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
-                # Rikki del included ones too
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -2052,7 +2057,7 @@ class Environment:
         of per spec."""
         installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
-            for concretized_hash in self.all_root_specs():
+            for concretized_hash in self.all_root_hashes():
                 spec = self.specs_by_hash[concretized_hash]
                 if not spec.installed or (
                     spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")

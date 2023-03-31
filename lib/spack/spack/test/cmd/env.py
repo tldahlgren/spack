@@ -1595,6 +1595,12 @@ def test_env_include_concrete_env_reconcretized(tmpdir):
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
 
+def test_env_include_nonexistant_concrete_env(tmpdir):
+    with pytest.raises(ev.SpackEnvironmentError):
+        env("create", "--include-concrete", "nonexistant_env", "combined_env")
+
+# Add test that makes sure the root specs don't have the included specs
+# Make sure there is a comment to explain why add an example
 
 # TEST INSTALL INCLUDED SPECS
 
