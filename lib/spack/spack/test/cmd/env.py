@@ -1445,6 +1445,7 @@ def test_env_include_concrete_env_yaml(tmpdir):
     assert "include_concrete" in combined_yaml
     assert test.path in combined_yaml["include_concrete"]
 
+
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV PATH
 def test_env_include_concrete_env_path_yaml(tmpdir):
     env("create", "test")
@@ -1461,6 +1462,7 @@ def test_env_include_concrete_env_path_yaml(tmpdir):
     assert "include_concrete" in combined_yaml
     assert test.path in combined_yaml["include_concrete"]
 
+
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH NONEXISTANT ENV (ERROR)
 def test_env_include_nonexistant_concrete_env(tmpdir):
     with pytest.raises(ev.SpackEnvironmentError):
@@ -1469,7 +1471,6 @@ def test_env_include_nonexistant_concrete_env(tmpdir):
 
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH MULTIPLE ENVS
 def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
-    # Words
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
@@ -1488,6 +1489,13 @@ def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
 
     assert test1.path in combined_yaml["include_concrete"][0]
     assert test2.path in combined_yaml["include_concrete"][1]
+
+
+# TEST MAKE SURE INCLUDE IN LOCK FILE MATCHES INCLUDED ENV
+
+# TEST CONCRETE_SPECS IS EMPTY, BUT THERE ARE SPECS IN INCLUDE (explain why)
+
+# TEST INSTALL INCLUDED SPECS
 
 # Add test that makes sure the root specs don't have the included specs
 # Make sure there is a comment to explain why add an example
