@@ -918,16 +918,15 @@ class Environment:
 
         # Extract and process include_concrete
         # Grab include_concrete from yaml
-        # Grabs specs and put in memory (backwards!)
+        # Grabs specs and put in memory
         if not self.include_concrete:
             self.include_concrete = config_dict(self.yaml).get(included_concrete_name, [])
 
         try:
             if self.include_concrete:
                 self.include_concrete_envs()
-        except:
-            # TODO Rikki: Write error explination
-            raise SpackEnvironmentError("SOMETHING")
+        except OSError as e:
+            raise SpackEnvironmentError("Unable to concretize included envs.\nError: {0}", e)
 
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
@@ -1184,24 +1183,25 @@ class Environment:
         )
 
     def include_concrete_envs(self):
-        # TODO Rikki: Explain method
-        """Write Something"""
+        """Concretize included envs and save the included envs'
+        specs internally"""
 
-        root_hash = set()
-        concrete_hash = set()
         lockfile_meta = None
         self.included_concrete_specs = dict()
 
         for env_name in self.include_concrete:
+            root_hash = set()
+            concrete_hash = set()
+
             if os.sep in env_name:
                 env_path = env_name
             elif exists(env_name):
                 env_path = root(env_name)
             else:
-                raise SpackEnvironmentError("'%s': unable to find env" % env_name)
+                raise SpackEnvironmentError("Unable to find env: '%s'" % env_name)
 
             if not is_env_dir(env_path):
-                raise SpackEnvironmentError("'%s': unable to find env path" % env_path)
+                raise SpackEnvironmentError("Unable to find env path: '%s'" % env_path)
 
             env = Environment(env_path)
             env.concretize(force=False)
@@ -1497,7 +1497,6 @@ class Environment:
                 dag_hash = self.concretized_order[i]
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
-                # Rikki del included ones too
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -2378,8 +2377,8 @@ class Environment:
 
         if "include" in d:
             for env_name, env_info in d["include"].items():
-                for root_list in env_info["roots"]:
-                    self.included_concretized_order.append(root_list["hash"])
+                for root_info in env_info["roots"]:
+                    self.included_concretized_order.append(root_info["hash"])
                 included_json_specs_by_hash.update(env_info["concrete_specs"])
 
         current_lockfile_format = d["_meta"]["lockfile-version"]

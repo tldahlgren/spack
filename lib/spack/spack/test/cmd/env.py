@@ -1428,52 +1428,69 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
+# Rikki
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV NAME
-def test_env_include_concrete_env(tmpdir, mock_stage):
-    # Words
-    e1 = ev.create("test")
-    e1.add("mpileaks")
+def test_env_include_concrete_env_yaml(tmpdir):
+    env("create", "test")
+    test = ev.read("test")
 
-    env = ev.create("--include-concrete", "test", "include_test")
+    with test:
+        add("mpileaks")
 
-    # assert "include_concrete" is in yaml file
-    # assert path to test env is under "include_concrete"
+    env("create", "--include-concrete", "test", "combined_env")
 
+    combined = ev.read("combined_env")
+    combined_yaml = ev.config_dict(combined.raw_yaml)
+
+    assert "include_concrete" in combined_yaml
+    assert test.path in combined_yaml["include_concrete"]
 
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV PATH
-def test_env_include_concrete_env_path(tmpdir, mock_stage):
-    # Words
-    e1 = ev.create("test")
-    e1.add("mpileaks")
+def test_env_include_concrete_env_path_yaml(tmpdir):
+    env("create", "test")
+    test = ev.read("test")
 
-    env = ev.create("--include-concrete", ev.root(e1), "include_test")
+    with test:
+        add("mpileaks")
 
-    # assert "include_concrete" is in yaml file
-    # assert path to test env is under "include_concrete"
+    env("create", "--include-concrete", test.path, "combined_env")
 
+    combined = ev.read("combined_env")
+    combined_yaml = ev.config_dict(combined.raw_yaml)
+
+    assert "include_concrete" in combined_yaml
+    assert test.path in combined_yaml["include_concrete"]
 
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH NONEXISTANT ENV (ERROR)
-def test_env_include_nonexistant_concrete_env(tmpdir, mock_stage):
-    # Words
-    ev.create("--include-concrete", "test", "include_test")
-    # Should cause error
+def test_env_include_nonexistant_concrete_env(tmpdir):
+    with pytest.raises(ev.SpackEnvironmentError):
+        env("create", "--include-concrete", "nonexistant_env", "combined_env")
 
 
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH MULTIPLE ENVS
 def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
     # Words
-    e1 = ev.create("test1")
-    e1.add("mpileaks@2.1")
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("mpileaks")
 
-    e2 = ev.create("test2")
-    e2.add("mpileaks@2.2")
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
 
-    env = ev.create("--include-concrete", "test1", "--include-concrete", "test2", "include_test")
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+    combined = ev.read("combined_env")
+    combined_yaml = ev.config_dict(combined.raw_yaml)
 
-    # assert "include_concrete" is in yaml file
-    # assert path to test1 env is under "include_concrete" in position 0
-    # assert path to test2 env is under "include_concrete" in position 1
+    print("combined_yaml[\"include_concrete\"]", combined_yaml["include_concrete"])
 
+    assert test1.path in combined_yaml["include_concrete"][0]
+    assert test2.path in combined_yaml["include_concrete"][1]
+
+# Add test that makes sure the root specs don't have the included specs
+# Make sure there is a comment to explain why add an example
 
 def test_env_config_view_default(
     environment_from_manifest, mock_stage, mock_fetch, install_mockery
