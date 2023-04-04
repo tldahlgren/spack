@@ -1189,9 +1189,6 @@ class Environment:
         concrete_hash = set()
 
         for env_name in self.include_concrete:
-            root_hash = set()
-            concrete_hash = set()
-
             if os.sep in env_name:
                 env_path = env_name
             elif exists(env_name):
@@ -2378,6 +2375,8 @@ class Environment:
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
 
+        # Rikki: Create included_concretized_user_specs
+        # Rikki: Should included vars be dict keyed by env_path
         if "include" in d:
             for env_name, env_info in d["include"].items():
                 for root_info in env_info["roots"]:
@@ -2401,16 +2400,15 @@ class Environment:
         first_seen, self.concretized_order = self.filter_specs(
             reader, json_specs_by_hash, self.concretized_order
         )
-
         for spec_dag_hash in self.concretized_order:
             self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
-        if self.included_concretized_order:
+        if self.included_specs_by_hash:
             first_seen, self.included_concretized_order = self.filter_specs(
                 reader, included_json_specs_by_hash, self.included_concretized_order
             )
             for spec_dag_hash in self.included_concretized_order:
-                self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+                self.included_specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
     def filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest
