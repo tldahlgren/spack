@@ -1485,11 +1485,11 @@ def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
     combined = ev.read("combined_env")
     combined_yaml = ev.config_dict(combined.raw_yaml)
 
-    print('combined_yaml["include_concrete"]', combined_yaml["include_concrete"])
-
     assert test1.path in combined_yaml["include_concrete"][0]
     assert test2.path in combined_yaml["include_concrete"][1]
 
+    # assert the root specs exist?
+    # assert not duplicate cocnrete specs?
 
 # TEST MAKE SURE INCLUDE IN LOCK FILE MATCHES INCLUDED ENV
 
