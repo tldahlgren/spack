@@ -1488,11 +1488,29 @@ def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
     assert test1.path in combined_yaml["include_concrete"][0]
     assert test2.path in combined_yaml["include_concrete"][1]
 
-    # assert the root specs exist?
-    # assert not duplicate cocnrete specs?
+    # No local specs inn the combined env
+    assert not combined_yaml["specs"]
 
 
 # TEST MAKE SURE INCLUDE IN LOCK FILE MATCHES INCLUDED ENV
+def test_env_includee_concrete_envs_lockfile(tmpdir):
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("mpileaks")
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+    combined = ev.read("combined_env")
+
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+    print(lockfile_as_dict.keys())
+    #assert False
 
 # TEST CONCRETE_SPECS IS EMPTY, BUT THERE ARE SPECS IN INCLUDE (explain why)
 
