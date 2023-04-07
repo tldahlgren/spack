@@ -1488,7 +1488,7 @@ def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
     assert test1.path in combined_yaml["include_concrete"][0]
     assert test2.path in combined_yaml["include_concrete"][1]
 
-    # No local specs inn the combined env
+    # No local specs in the combined env
     assert not combined_yaml["specs"]
 
 
@@ -1498,19 +1498,24 @@ def test_env_includee_concrete_envs_lockfile(tmpdir):
     test1 = ev.read("test1")
     with test1:
         add("mpileaks")
+    test1.concretize()
 
     env("create", "test2")
     test2 = ev.read("test2")
     with test2:
         add("libelf")
+    test2.concretize()
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
     combined = ev.read("combined_env")
 
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
-    print(lockfile_as_dict.keys())
-    #assert False
+
+    assert not lockfile_as_dict["roots"]
+    assert not lockfile_as_dict["concrete_specs"]
+
+    # assert lockfile_as_dict["include"][test1.path]["roots"]["hash"] == str(test1.specs_by_hash.keys())
 
 # TEST CONCRETE_SPECS IS EMPTY, BUT THERE ARE SPECS IN INCLUDE (explain why)
 
