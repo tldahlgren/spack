@@ -1537,14 +1537,14 @@ def test_env_include_concrete_env_reconcretized(tmpdir):
     combined = ev.read("combined_env")
     combined.concretize()
     with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f) # don't use private method
+        lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
 
     combined.concretize()
     with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f) # don't use private method
+        lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
