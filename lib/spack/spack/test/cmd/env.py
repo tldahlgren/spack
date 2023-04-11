@@ -1512,14 +1512,43 @@ def test_env_include_concrete_envs_lockfile(tmpdir):
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
 
-    assert not lockfile_as_dict["roots"]
-    assert not lockfile_as_dict["concrete_specs"]
-
     assert lockfile_as_dict["include"][test1.path]["roots"][0]["hash"] in test1.specs_by_hash
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
 
 
 # TEST CONCRETE_SPECS IS EMPTY, BUT THERE ARE SPECS IN INCLUDE (explain why)
+def test_env_include_concrete_env_reconcretized(tmpdir):
+    """Double check to make sure that concrete_specs for the local specs is empty
+    after recocnretizing.
+    """
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("mpileaks")
+    test1.concretize()
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+    combined = ev.read("combined_env")
+    combined.concretize()
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f) # don't use private method
+
+    assert not lockfile_as_dict["roots"]
+    assert not lockfile_as_dict["concrete_specs"]
+
+    combined.concretize()
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f) # don't use private method
+
+    assert not lockfile_as_dict["roots"]
+    assert not lockfile_as_dict["concrete_specs"]
+
 
 # TEST INSTALL INCLUDED SPECS
 
