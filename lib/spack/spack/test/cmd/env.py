@@ -1510,13 +1510,14 @@ def test_env_include_concrete_envs_lockfile(tmpdir):
     combined = ev.read("combined_env")
 
     with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f) # don't use private method
+        lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
 
     assert lockfile_as_dict["include"][test1.path]["roots"][0]["hash"] in test1.specs_by_hash
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
+
 
 # TEST CONCRETE_SPECS IS EMPTY, BUT THERE ARE SPECS IN INCLUDE (explain why)
 
