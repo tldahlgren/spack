@@ -941,6 +941,9 @@ class Environment:
                 self.dev_specs[name]["path"] = name
 
     def all_root_specs(self):
+        return self.concretized_user_specs + self.included_concretized_user_specs
+
+    def all_root_hashes(self):
         return self.concretized_order + self.included_concretized_order
 
     @property
@@ -2176,7 +2179,7 @@ class Environment:
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
-        for s, h in zip(self.concretized_user_specs, self.concretized_order):
+        for s, h in zip(self.all_root_specs(), self.all_root_hashes()):
             yield (s, self.specs_by_hash[h])
 
     def concrete_roots(self):
@@ -2306,7 +2309,7 @@ class Environment:
         If these specs appear under different user_specs, only one copy
         is added to the list returned.
         """
-        specs = [self.specs_by_hash[h] for h in self.concretized_order]
+        specs = [self.specs_by_hash[h] for h in self.all_root_hashes()]
 
         if recurse_dependencies:
             specs.extend(
@@ -2367,6 +2370,7 @@ class Environment:
         """Read a lockfile dictionary into this environment."""
         self.specs_by_hash = {}
         self.included_specs_by_hash = {}
+        self.included_concretized_user_specs = []
 
         roots = d["roots"]
         self.concretized_user_specs = [Spec(r["spec"]) for r in roots]
@@ -2374,12 +2378,12 @@ class Environment:
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
 
-        # Rikki: Create included_concretized_user_specs
         # Rikki: Should included vars be dict keyed by env_path
         if "include" in d:
             for env_name, env_info in d["include"].items():
                 for root_info in env_info["roots"]:
                     self.included_concretized_order.append(root_info["hash"])
+                    self.included_concretized_user_specs.append(Spec(root_info["spec"]))
                 if "concrete_specs" in env_info:
                     included_json_specs_by_hash.update(env_info["concrete_specs"])
 
@@ -2398,15 +2402,16 @@ class Environment:
         first_seen, self.concretized_order = self.filter_specs(
             reader, json_specs_by_hash, self.concretized_order
         )
+
         for spec_dag_hash in self.concretized_order:
             self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
-        if self.included_specs_by_hash:
+        if self.included_concretized_order:
             first_seen, self.included_concretized_order = self.filter_specs(
                 reader, included_json_specs_by_hash, self.included_concretized_order
             )
             for spec_dag_hash in self.included_concretized_order:
-                self.included_specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+                self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
     def filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest

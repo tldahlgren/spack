@@ -247,7 +247,36 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
 
 
-# ADD TEST FOR INSTALLING INCLUDED SPECS
+# TEST INSTALL INCLUDED SPECS
+def test_env_install_include_concrete_env(tmpdir, install_mockery):
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("mpileaks")
+    test1.concretize()
+    test1_roots = test1.concretized_order
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+    test2_roots = test2.concretized_order
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+
+    combined = ev.read("combined_env")
+    with ev.read("combined_env"):
+        install()
+
+    combined_included_roots = combined.included_concretized_order
+
+    for spec in combined.all_specs():
+        assert spec.installed
+
+    assert all(spec in combined_included_roots for spec in test1_roots)
+    assert all(spec in combined_included_roots for spec in test2_roots)
+
 
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
@@ -452,7 +481,20 @@ def test_remove_command():
         assert "mpileaks@" not in find("--show-concretized")
 
 
-# ADD ERROR REMOVING LINKED ENV
+def test_bad_remove_included_env(tmpdir):
+    env("create", "test")
+
+    with ev.read("test"):
+        add("mpileaks")
+
+    env("create", "--include-concrete", "test", "combined_env")
+
+    with pytest.raises(SpackCommandError):
+        env("remove", "test")
+
+
+# ADD TEST FOR FORCE REMOVING ENV
+
 
 
 def test_environment_status(capsys, tmpdir):
@@ -1464,7 +1506,7 @@ def test_env_include_concrete_env_path_yaml(tmpdir):
 
 
 # ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH NONEXISTANT ENV (ERROR)
-def test_env_include_nonexistant_concrete_env(tmpdir):
+def test_env_include_bad_concrete_env(tmpdir):
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
 
@@ -1510,7 +1552,7 @@ def test_env_include_concrete_envs_lockfile(tmpdir):
     combined = ev.read("combined_env")
 
     with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
+        lockfile_as_dict = combined._read_lockfile(f)
 
     assert lockfile_as_dict["include"][test1.path]["roots"][0]["hash"] in test1.specs_by_hash
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
@@ -1537,14 +1579,15 @@ def test_env_include_concrete_env_reconcretized(tmpdir):
     combined = ev.read("combined_env")
     combined.concretize()
     with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
+        lockfile_as_dict = combined._read_lockfile(f)
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
 
+    # Re-concretize, roots and concrete_specs should still be empty
     combined.concretize()
     with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f)  # don't use private method
+        lockfile_as_dict = combined._read_lockfile(f)
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
