@@ -480,7 +480,7 @@ def test_remove_command():
         assert "mpileaks@" not in find("--show-concretized")
 
 
-def test_bad_remove_included_env(tmpdir):
+def test_bad_remove_included_env():
     env("create", "test")
 
     with ev.read("test"):
@@ -493,7 +493,19 @@ def test_bad_remove_included_env(tmpdir):
 
 
 # ADD TEST FOR FORCE REMOVING ENV
+def test_force_remove_included_env():
+    env("create", "test")
 
+    with ev.read("test"):
+        add("mpileaks")
+
+    env("create", "--include-concrete", "test", "combined_env")
+
+    env("remove", "-f", "test")
+
+    # assert warning pops up
+    out = env("list")
+    assert "test" not in out
 
 def test_environment_status(capsys, tmpdir):
     with tmpdir.as_cwd():
@@ -1468,9 +1480,7 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-# Rikki
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV NAME
-def test_env_include_concrete_env_yaml(tmpdir):
+def test_env_include_concrete_env_yaml():
     env("create", "test")
     test = ev.read("test")
 
@@ -1486,8 +1496,7 @@ def test_env_include_concrete_env_yaml(tmpdir):
     assert test.path in combined_yaml["include_concrete"]
 
 
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH ENV PATH
-def test_env_include_concrete_env_path_yaml(tmpdir):
+def test_env_include_concrete_env_path_yaml():
     env("create", "test")
     test = ev.read("test")
 
@@ -1503,14 +1512,12 @@ def test_env_include_concrete_env_path_yaml(tmpdir):
     assert test.path in combined_yaml["include_concrete"]
 
 
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH NONEXISTANT ENV (ERROR)
-def test_env_include_bad_concrete_env(tmpdir):
+def test_env_include_bad_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
 
 
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH MULTIPLE ENVS
-def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
+def test_env_include_multiple_concrete_envs():
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
@@ -1532,7 +1539,6 @@ def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
     assert not combined_yaml["specs"]
 
 
-# TEST MAKE SURE INCLUDE IN LOCK FILE MATCHES INCLUDED ENV
 def test_env_include_concrete_envs_lockfile(tmpdir):
     env("create", "test1")
     test1 = ev.read("test1")
@@ -1556,7 +1562,6 @@ def test_env_include_concrete_envs_lockfile(tmpdir):
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
 
 
-# TEST CONCRETE_SPECS IS EMPTY, BUT THERE ARE SPECS IN INCLUDE (explain why)
 def test_env_include_concrete_env_reconcretized(tmpdir):
     """Double check to make sure that concrete_specs for the local specs is empty
     after recocnretizing.
