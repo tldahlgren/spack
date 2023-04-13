@@ -492,7 +492,6 @@ def test_bad_remove_included_env():
         env("remove", "test")
 
 
-# ADD TEST FOR FORCE REMOVING ENV
 def test_force_remove_included_env():
     env("create", "test")
 
@@ -506,6 +505,7 @@ def test_force_remove_included_env():
     # assert warning pops up
     out = env("list")
     assert "test" not in out
+
 
 def test_environment_status(capsys, tmpdir):
     with tmpdir.as_cwd():
