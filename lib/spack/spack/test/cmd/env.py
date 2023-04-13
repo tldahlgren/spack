@@ -278,7 +278,6 @@ def test_env_install_include_concrete_env(tmpdir, install_mockery):
     assert all(spec in combined_included_roots for spec in test2_roots)
 
 
-
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand("install")
     install("dependent-install")
@@ -494,7 +493,6 @@ def test_bad_remove_included_env(tmpdir):
 
 
 # ADD TEST FOR FORCE REMOVING ENV
-
 
 
 def test_environment_status(capsys, tmpdir):
