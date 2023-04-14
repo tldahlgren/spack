@@ -347,7 +347,24 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-# ADD TEST FOR SPACK FIND IN ENV WITH --INCLUDE-CONCRETE
+def test_find_specs_include_cocnrete_env(mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config):
+    env("create", "test1")
+    with ev.read("test1"):
+        install("--add", "mpileaks")
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        install("--add", "libelf")
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+
+    with ev.read("combined_env"):
+        output = find()
+
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
 
 
 def test_find_loaded(database, working_env):

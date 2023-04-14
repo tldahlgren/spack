@@ -500,10 +500,10 @@ def test_force_remove_included_env():
 
     env("create", "--include-concrete", "test", "combined_env")
 
-    env("remove", "-f", "test")
-
-    # assert warning pops up
+    output = env("remove", "-f", "-y", "test")
     out = env("list")
+
+    assert "\"test\" is being used by environment \"combined_env\"" in output
     assert "test" not in out
 
 
