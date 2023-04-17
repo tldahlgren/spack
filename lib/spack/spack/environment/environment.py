@@ -419,15 +419,6 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
-    #=======
-    #def create(name, init_file=None, with_view=None, keep_relative=False, include_concrete=None):
-    #    """Create a named environment in Spack."""
-    #    validate_env_name(name)
-    #    if exists(name):
-    #        raise SpackEnvironmentError("'%s': environment already exists" % name)
-    #    return Environment(root(name), init_file, with_view, keep_relative, include_concrete)
-    #>>>>>>> eca33289ba (Design Update)
-
 
 def all_environment_names():
     """List the names of environments that currently exist."""
@@ -917,8 +908,7 @@ class Environment:
             self.views = {}
 
         # Extract and process include_concrete
-        # Grab include_concrete from yaml
-        # Grabs specs and put in memory
+        # Grabs include_concrete specs and put in memory
         if not self.include_concrete:
             self.include_concrete = config_dict(self.yaml).get(included_concrete_name, [])
 
@@ -2369,7 +2359,6 @@ class Environment:
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
         self.specs_by_hash = {}
-        self.included_specs_by_hash = {}
         self.included_concretized_user_specs = []
 
         roots = d["roots"]
@@ -2378,7 +2367,6 @@ class Environment:
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
 
-        # Rikki: Should included vars be dict keyed by env_path
         if "include" in d:
             for env_name, env_info in d["include"].items():
                 for root_info in env_info["roots"]:
