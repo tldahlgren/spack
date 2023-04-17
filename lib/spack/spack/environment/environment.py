@@ -983,6 +983,7 @@ class Environment:
         #TODO: Rikki, make self.included_concretized_order a dict for debugging purposes
         self.included_concretized_order = []  # roots of the included envs, in order
         self.included_specs_by_hash = {} # concretized specs by hash from the included envs
+        self._repo = None  # RepoPath for this env (memoized)
         self._previous_active = None  # previously active environment
         if not re_read:
             # things that cannot be recreated from file
