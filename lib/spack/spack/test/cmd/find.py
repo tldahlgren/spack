@@ -347,7 +347,12 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_cocnrete_env(mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config):
+def test_find_specs_include_cocnrete_env(mutable_mock_env_path,
+                                         install_mockery,
+                                         mock_fetch,
+                                         mock_packages,
+                                         mock_archive,
+                                         config):
     env("create", "test1")
     with ev.read("test1"):
         install("--add", "mpileaks")
