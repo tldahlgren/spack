@@ -503,7 +503,7 @@ def test_force_remove_included_env():
     output = env("remove", "-f", "-y", "test")
     out = env("list")
 
-    assert "\"test\" is being used by environment \"combined_env\"" in output
+    assert '"test" is being used by environment "combined_env"' in output
     assert "test" not in out
 
 
