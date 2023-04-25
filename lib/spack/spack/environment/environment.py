@@ -2307,9 +2307,6 @@ class Environment:
         is added to the list returned.
         """
         specs = [self.specs_by_hash[h] for h in self.all_root_hashes()]
-        #specs = [self.specs_by_hash[h] for h in self.concretized_order]
-        #specs.extend([self.included_specs_by_hash[h] for h in self.included_concretized_order])
-
         if recurse_dependencies:
             specs.extend(
                 traverse.traverse_nodes(
@@ -2410,7 +2407,6 @@ class Environment:
             )
             for spec_dag_hash in self.included_concretized_order:
                 self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
-            )
 
     def filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest
@@ -2453,7 +2449,10 @@ class Environment:
         # Now make sure concretized_order and our internal specs dict
         # contains the keys used by modern spack (i.e. the dag_hash
         # that includes build deps and package hash).
-        order_concretized = [specs_by_hash[h_key].dag_hash() for h_key in order_concretized]
+
+        order_concretized = [
+            specs_by_hash[h_key].dag_hash() for h_key in order_concretized
+        ]
 
         return first_seen, order_concretized
 

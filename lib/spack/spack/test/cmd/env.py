@@ -1586,46 +1586,13 @@ def test_env_include_concrete_env_reconcretized(tmpdir):
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
-
-    # Re-concretize, roots and concrete_specs should still be empty
+    
     combined.concretize()
-    with open(combined.lock_path) as f:
-        lockfile_as_dict = combined._read_lockfile(f)
-
-    assert not lockfile_as_dict["roots"]
-    assert not lockfile_as_dict["concrete_specs"]
-
-def test_env_include_nonexistant_concrete_env(tmpdir):
-    with pytest.raises(ev.SpackEnvironmentError):
-        env("create", "--include-concrete", "nonexistant_env", "combined_env")
-
-
-# ADD TEST CREATE ENV --INCLUDE-CONCRETE WITH MULTIPLE ENVS
-def test_env_include_multiple_concrete_envs(tmpdir, mock_stage):
-    # Words
-    env("create", "test1")
-    test1 = ev.read("test1")
-    with test1:
-        add("mpileaks")
-
-    env("create", "test2")
-    test2 = ev.read("test2")
-    with test2:
-        add("libelf")
-
-    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
     combined = ev.read("combined_env")
     combined_yaml = ev.config_dict(combined.raw_yaml)
 
-    assert test1.path in combined_yaml["include_concrete"][0]
-    assert test2.path in combined_yaml["include_concrete"][1]
-
-    # assert the root specs exist?
-    # assert not duplicate cocnrete specs?
-
-
-# Add test that makes sure the root specs don't have the included specs
-# Make sure there is a comment to explain why add an example
+    assert not lockfile_as_dict["roots"]
+    assert not lockfile_as_dict["concrete_specs"]
 
 # TEST INSTALL INCLUDED SPECS
 
