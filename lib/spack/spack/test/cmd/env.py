@@ -247,7 +247,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
 
 
-def test_env_install_include_concrete_env(tmpdir, install_mockery, mock_fetch):
+def test_env_install_include_concrete_env(install_mockery, mock_fetch):
     env("create", "test1")
     test1 = ev.read("test1")
 
@@ -1516,7 +1516,7 @@ def test_env_include_bad_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
 
-
+# SPEARATE THE CREATION OF ENVS INTO A SETUP METHOD
 def test_env_include_multiple_concrete_envs():
     env("create", "test1")
     test1 = ev.read("test1")
@@ -1539,7 +1539,7 @@ def test_env_include_multiple_concrete_envs():
     assert not combined_yaml["specs"]
 
 
-def test_env_include_concrete_envs_lockfile(tmpdir):
+def test_env_include_concrete_envs_lockfile():
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
@@ -1561,8 +1561,9 @@ def test_env_include_concrete_envs_lockfile(tmpdir):
     assert lockfile_as_dict["include"][test1.path]["roots"][0]["hash"] in test1.specs_by_hash
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
 
-
-def test_env_include_concrete_env_reconcretized(tmpdir):
+# TEST WITH UNIFY TRUE
+# TEST WITH UNIFY WHEN_POSSIBLE
+def test_env_include_concrete_env_reconcretized():
     """Double check to make sure that concrete_specs for the local specs is empty
     after recocnretizing.
     """
@@ -1589,7 +1590,8 @@ def test_env_include_concrete_env_reconcretized(tmpdir):
     
     combined.concretize()
     combined = ev.read("combined_env")
-    combined_yaml = ev.config_dict(combined.raw_yaml)
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]

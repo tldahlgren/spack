@@ -959,6 +959,19 @@ class Environment:
             dev_specs[name] = local_entry
         return dev_specs
 
+    @property
+    def included_user_specs(self):
+        spec_list = SpecList()
+
+        if not self.include_concrete:
+            return spec_list
+
+        for env, info in self.included_concrete_specs.items():
+            for root_list in info["roots"]:
+                spec_list.add(root_list["spec"])
+
+        return spec_list
+
     def clear(self, re_read=False):
         """Clear the contents of the environment
 
@@ -980,8 +993,8 @@ class Environment:
         self.specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
         self.included_concretized_user_specs = []  # user specs from last concretize's included env
-        #TODO: Rikki, make self.included_concretized_order a dict for debugging purposes
-        self.included_concretized_order = []  # roots of the included envs, in order
+        #TODO: Rikki, make included_specs_by_hash & self.included_concretized_order a dict for debugging purposes
+        self.included_concretized_order = [] # roots of the included envs, in order
         self.included_specs_by_hash = {} # concretized specs by hash from the included envs
         self._repo = None  # RepoPath for this env (memoized)
         self._previous_active = None  # previously active environment
@@ -1689,6 +1702,7 @@ class Environment:
         old_concretized_user_specs = self.all_root_specs()
         old_concretized_order = self.all_root_hashes()
         old_specs_by_hash = self.specs_by_hash
+        old_included_specs_by_hash = self.included_specs_by_hash
 
         self.concretized_user_specs = []
         self.concretized_order = []
@@ -1698,8 +1712,8 @@ class Environment:
             if s in self.user_specs:
                 concrete = old_specs_by_hash[h]
                 self._add_concrete_spec(s, concrete, new=False)
-            elif s in self.included_specs:
-                concrete = old_specs_by_hash[h]
+            elif s in self.included_user_specs:
+                concrete = old_included_specs_by_hash[h]
                 self._add_included_concrete_spec(s, concrete, new=False)
 
         # Concretize any new user specs that we haven't concretized yet
@@ -2056,7 +2070,10 @@ class Environment:
         installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
             for concretized_hash in self.all_root_hashes():
-                spec = self.specs_by_hash[concretized_hash]
+                if concretized_hash in self.specs_by_hash:
+                    spec = self.specs_by_hash[concretized_hash]
+                else:
+                    spec = self.included_specs_by_hash[concretized_hash]
                 if not spec.installed or (
                     spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
                 ):
@@ -2138,6 +2155,13 @@ class Environment:
         """Returns a generator for all concrete specs"""
         return traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
 
+    def all_specs(self):
+        """Return all specs, even those a user spec would shadow."""
+        roots = [self.specs_by_hash[h] for h in self.concretized_order]
+        roots.extend([self.included_specs_by_hash[h] for h in self.included_concretized_order])
+        specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
+        specs.sort()
+
     def all_specs(self) -> List[Spec]:
         """Returns a list of all concrete specs"""
         return list(self.all_specs_generator())
@@ -2177,7 +2201,10 @@ class Environment:
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
         for s, h in zip(self.all_root_specs(), self.all_root_hashes()):
-            yield (s, self.specs_by_hash[h])
+            if h in self.specs_by_hash:
+                yield (s, self.specs_by_hash[h])
+            else:
+                yield (s, self.included_specs_by_hash[h])
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
@@ -2406,7 +2433,7 @@ class Environment:
                 reader, included_json_specs_by_hash, self.included_concretized_order
             )
             for spec_dag_hash in self.included_concretized_order:
-                self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+                self.included_specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
     def filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest
