@@ -2477,9 +2477,7 @@ class Environment:
         # contains the keys used by modern spack (i.e. the dag_hash
         # that includes build deps and package hash).
 
-        order_concretized = [
-            specs_by_hash[h_key].dag_hash() for h_key in order_concretized
-        ]
+        order_concretized = [specs_by_hash[h_key].dag_hash() for h_key in order_concretized]
 
         return first_seen, order_concretized
 
