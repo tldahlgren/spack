@@ -1480,6 +1480,25 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
+def setup_combined_multiple_env():
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("mpileaks")
+    test1.concretize()
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+    combined = ev.read("combined_env")
+
+    return test1, test2, combined
+
+
 def test_env_include_concrete_env_yaml():
     env("create", "test")
     test = ev.read("test")
@@ -1516,20 +1535,10 @@ def test_env_include_bad_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
 
-# SPEARATE THE CREATION OF ENVS INTO A SETUP METHOD
+
 def test_env_include_multiple_concrete_envs():
-    env("create", "test1")
-    test1 = ev.read("test1")
-    with test1:
-        add("mpileaks")
+    test1, test2, combined = setup_combined_multiple_env()
 
-    env("create", "test2")
-    test2 = ev.read("test2")
-    with test2:
-        add("libelf")
-
-    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
-    combined = ev.read("combined_env")
     combined_yaml = ev.config_dict(combined.raw_yaml)
 
     assert test1.path in combined_yaml["include_concrete"][0]
@@ -1540,20 +1549,7 @@ def test_env_include_multiple_concrete_envs():
 
 
 def test_env_include_concrete_envs_lockfile():
-    env("create", "test1")
-    test1 = ev.read("test1")
-    with test1:
-        add("mpileaks")
-    test1.concretize()
-
-    env("create", "test2")
-    test2 = ev.read("test2")
-    with test2:
-        add("libelf")
-    test2.concretize()
-
-    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
-    combined = ev.read("combined_env")
+    test1, test2, combined = setup_combined_multiple_env()
 
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
@@ -1561,33 +1557,22 @@ def test_env_include_concrete_envs_lockfile():
     assert lockfile_as_dict["include"][test1.path]["roots"][0]["hash"] in test1.specs_by_hash
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
 
+
 # TEST WITH UNIFY TRUE
 # TEST WITH UNIFY WHEN_POSSIBLE
 def test_env_include_concrete_env_reconcretized():
     """Double check to make sure that concrete_specs for the local specs is empty
     after recocnretizing.
     """
-    env("create", "test1")
-    test1 = ev.read("test1")
-    with test1:
-        add("mpileaks")
-    test1.concretize()
+    test1, test2, combined = setup_combined_multiple_env()
 
-    env("create", "test2")
-    test2 = ev.read("test2")
-    with test2:
-        add("libelf")
-    test2.concretize()
-
-    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
-    combined = ev.read("combined_env")
     combined.concretize()
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
-    
+
     combined.concretize()
     combined = ev.read("combined_env")
     with open(combined.lock_path) as f:

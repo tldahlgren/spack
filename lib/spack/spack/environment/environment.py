@@ -930,10 +930,10 @@ class Environment:
             if "path" not in entry:
                 self.dev_specs[name]["path"] = name
 
-    def all_root_specs(self):
+    def all_concretized_user_specs(self):
         return self.concretized_user_specs + self.included_concretized_user_specs
 
-    def all_root_hashes(self):
+    def all_concretized_orders(self):
         return self.concretized_order + self.included_concretized_order
 
     @property
@@ -993,9 +993,9 @@ class Environment:
         self.specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
         self.included_concretized_user_specs = []  # user specs from last concretize's included env
-        #TODO: Rikki, make included_specs_by_hash & self.included_concretized_order a dict for debugging purposes
-        self.included_concretized_order = [] # roots of the included envs, in order
-        self.included_specs_by_hash = {} # concretized specs by hash from the included envs
+        # TODO: Rikki, included_specs_by_hash & self.included_concretized_order dict for debugging
+        self.included_concretized_order = []  # roots of the included envs, in order
+        self.included_specs_by_hash = {}  # concretized specs by hash from the included envs
         self._repo = None  # RepoPath for this env (memoized)
         self._previous_active = None  # previously active environment
         if not re_read:
@@ -1699,8 +1699,8 @@ class Environment:
         import spack.bootstrap
 
         # keep any concretized specs whose user specs are still in the manifest
-        old_concretized_user_specs = self.all_root_specs()
-        old_concretized_order = self.all_root_hashes()
+        old_concretized_user_specs = self.all_concretized_user_specs()
+        old_concretized_order = self.all_concretized_orders()
         old_specs_by_hash = self.specs_by_hash
         old_included_specs_by_hash = self.included_specs_by_hash
 
@@ -2069,7 +2069,7 @@ class Environment:
         of per spec."""
         installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
-            for concretized_hash in self.all_root_hashes():
+            for concretized_hash in self.all_concretized_orders():
                 if concretized_hash in self.specs_by_hash:
                     spec = self.specs_by_hash[concretized_hash]
                 else:
@@ -2200,7 +2200,7 @@ class Environment:
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
-        for s, h in zip(self.all_root_specs(), self.all_root_hashes()):
+        for s, h in zip(self.all_concretized_user_specs(), self.all_concretized_orders()):
             if h in self.specs_by_hash:
                 yield (s, self.specs_by_hash[h])
             else:
@@ -2333,7 +2333,7 @@ class Environment:
         If these specs appear under different user_specs, only one copy
         is added to the list returned.
         """
-        specs = [self.specs_by_hash[h] for h in self.all_root_hashes()]
+        specs = [self.specs_by_hash[h] for h in self.all_concretized_orders()]
         if recurse_dependencies:
             specs.extend(
                 traverse.traverse_nodes(
