@@ -247,28 +247,17 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
 
 
-def test_env_install_include_concrete_env(install_mockery, mock_fetch):
-    env("create", "test1")
-    test1 = ev.read("test1")
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch):
+    test1, test2, combined = setup_combined_multiple_env()
 
-    with test1:
-        add("mpileaks")
-    test1.concretize()
-    test1_roots = test1.concretized_order
-
-    env("create", "test2")
-    test2 = ev.read("test2")
-
-    with test2:
-        add("libelf")
-    test2.concretize()
-    test2_roots = test2.concretized_order
-
-    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
-    combined = ev.read("combined_env")
+    combined.unify = unify
 
     with combined:
         install()
+
+    test1_roots = test1.concretized_order
+    test2_roots = test2.concretized_order
     combined_included_roots = combined.included_concretized_order
 
     for spec in combined.all_specs():
@@ -1558,14 +1547,14 @@ def test_env_include_concrete_envs_lockfile():
     assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
 
 
-# TEST WITH UNIFY TRUE
-# TEST WITH UNIFY WHEN_POSSIBLE
-def test_env_include_concrete_env_reconcretized():
+@pytest.mark.parametrize("unify", [True, False, "when_possible"])
+def test_env_include_concrete_env_reconcretized(unify):
     """Double check to make sure that concrete_specs for the local specs is empty
     after recocnretizing.
     """
     test1, test2, combined = setup_combined_multiple_env()
 
+    combined.unify = unify
     combined.concretize()
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
