@@ -263,8 +263,8 @@ def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch):
     for spec in combined.all_specs():
         assert spec.installed
 
-    assert all(spec in combined_included_roots for spec in test1_roots)
-    assert all(spec in combined_included_roots for spec in test2_roots)
+    assert test1_roots == combined_included_roots[test1.path]
+    assert test2_roots == combined_included_roots[test2.path]
 
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
@@ -1552,7 +1552,7 @@ def test_env_include_concrete_env_reconcretized(unify):
     """Double check to make sure that concrete_specs for the local specs is empty
     after recocnretizing.
     """
-    test1, test2, combined = setup_combined_multiple_env()
+    _, _, combined = setup_combined_multiple_env()
 
     combined.unify = unify
     combined.concretize()
