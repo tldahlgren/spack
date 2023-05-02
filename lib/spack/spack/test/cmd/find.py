@@ -347,24 +347,40 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_cocnrete_env(
-    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
+def test_find_specs_include_concrete_env(
+    mutable_mock_env_path, config, mutable_mock_repo, tmpdir
 ):
-    env("create", "test1")
-    with ev.read("test1"):
-        install("--add", "mpileaks")
 
-    env("create", "test2")
-    test2 = ev.read("test2")
-    with test2:
-        install("--add", "libelf")
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+env:
+  specs:
+  - libelf
+"""
+            )
+        env("create", "test2", "spack.yaml")
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
 
     with ev.read("combined_env"):
         output = find()
 
-    assert "Included specs" in output
+    assert "No root specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
 
