@@ -251,6 +251,9 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch):
     test1, test2, combined = setup_combined_multiple_env()
 
+    combined.concretize()
+    combined.write()
+
     combined.unify = unify
 
     with combined:
@@ -1498,7 +1501,7 @@ def test_env_include_concrete_env_yaml():
     env("create", "--include-concrete", "test", "combined_env")
 
     combined = ev.read("combined_env")
-    combined_yaml = ev.config_dict(combined.raw_yaml)
+    combined_yaml = ev.config_dict(combined.manifest)
 
     assert "include_concrete" in combined_yaml
     assert test.path in combined_yaml["include_concrete"]
@@ -1514,7 +1517,7 @@ def test_env_include_concrete_env_path_yaml():
     env("create", "--include-concrete", test.path, "combined_env")
 
     combined = ev.read("combined_env")
-    combined_yaml = ev.config_dict(combined.raw_yaml)
+    combined_yaml = ev.config_dict(combined.manifest)
 
     assert "include_concrete" in combined_yaml
     assert test.path in combined_yaml["include_concrete"]
@@ -1528,7 +1531,7 @@ def test_env_include_bad_concrete_env():
 def test_env_include_multiple_concrete_envs():
     test1, test2, combined = setup_combined_multiple_env()
 
-    combined_yaml = ev.config_dict(combined.raw_yaml)
+    combined_yaml = ev.config_dict(combined.manifest)
 
     assert test1.path in combined_yaml["include_concrete"][0]
     assert test2.path in combined_yaml["include_concrete"][1]
@@ -1540,6 +1543,13 @@ def test_env_include_multiple_concrete_envs():
 def test_env_include_concrete_envs_lockfile():
     test1, test2, combined = setup_combined_multiple_env()
 
+    combined_yaml = ev.config_dict(combined.manifest)
+
+    assert "include_concrete" in combined_yaml
+    assert test1.path in combined_yaml["include_concrete"]
+
+    combined.concretize()
+    combined.write()
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
@@ -1556,6 +1566,7 @@ def test_env_include_concrete_env_reconcretized(unify):
 
     combined.unify = unify
     combined.concretize()
+    combined.write()
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
@@ -1570,10 +1581,6 @@ def test_env_include_concrete_env_reconcretized(unify):
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
 
-# TEST INSTALL INCLUDED SPECS
-
-# Add test that makes sure the root specs don't have the included specs
-# Make sure there is a comment to explain why add an example
 
 def test_env_config_view_default(
     environment_from_manifest, mock_stage, mock_fetch, install_mockery

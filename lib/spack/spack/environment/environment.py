@@ -107,13 +107,16 @@ def check_disallowed_env_config_mods(scopes):
     return scopes
 
 
-def default_manifest_yaml(include_concrete: [str]): # Rikki add include_concrete parameter???
+def default_manifest_yaml(include_concrete: [str] = None): # Rikki fix this hacky mess :(
     """default spack.yaml file to put in new environments"""
     concrete_env = ""
     if include_concrete:
         concrete_env = "\n  include_concrete:"
         for env in include_concrete:
-            concrete_env += "\n  - {0}".format(env)
+            if is_env_dir(env):
+                concrete_env += "\n  - {0}".format(env)
+            else:
+                concrete_env += "\n  - {0}".format(root(env))
 
     return """\
 # This is a Spack Environment file.
@@ -814,6 +817,8 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
+        self.included_concretized_user_specs = {}
+        self.included_concretized_order = {}
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -910,7 +915,7 @@ class Environment:
         # Extract and process include_concrete
         # Grabs include_concrete specs and put in memory
         if not self.include_concrete:
-            self.include_concrete = config_dict(self.yaml).get(included_concrete_name, [])
+            self.include_concrete = config_dict(self.manifest).get(included_concrete_name, [])
 
         try:
             if self.include_concrete:
@@ -3018,6 +3023,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
         self.changed = True
+
+    def add_include_concrete_env(self, env_name) -> None:
+        """ TODO Rikki: Give description
+        """
+        # if env doesn't exists
+            # throw error
+
+        #config_dict(self.pristine_yaml_content).get("include_concrete", [])
+        #config_dict(self.pristine_yaml_content)["include-concrete"].append(root(env))
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
         """Appends a user spec to the first active definition matching the name passed as argument.
