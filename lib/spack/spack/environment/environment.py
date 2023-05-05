@@ -107,7 +107,7 @@ def check_disallowed_env_config_mods(scopes):
     return scopes
 
 
-def default_manifest_yaml(include_concrete: [str] = None): # Rikki fix this hacky mess :(
+def default_manifest_yaml(include_concrete: List[str] = None):  # Rikki fix this hacky mess :(
     """default spack.yaml file to put in new environments"""
     concrete_env = ""
     if include_concrete:
@@ -295,7 +295,7 @@ def create(
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
-    include_concrete: [str] = None,
+    include_concrete: List[str] = None,
 ) -> "Environment":
     """Create a managed environment in Spack and returns it.
 
@@ -315,7 +315,11 @@ def create(
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
-        environment_dir, init_file=init_file, with_view=with_view, keep_relative=keep_relative, include_concrete=include_concrete
+        environment_dir,
+        init_file=init_file,
+        with_view=with_view,
+        keep_relative=keep_relative,
+        include_concrete=include_concrete
         )
 
 
@@ -324,7 +328,7 @@ def create_in_dir(
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
-    include_concrete: [str] = None,
+    include_concrete: List[str] = None,
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
@@ -786,7 +790,9 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(self, manifest_dir: Union[str, pathlib.Path], include_concrete: [str] = None) -> None:
+    def __init__(self,
+                 manifest_dir: Union[str, pathlib.Path],
+                 include_concrete: List[str] = None) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -817,8 +823,8 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
-        self.included_concretized_user_specs = {}
-        self.included_concretized_order = {}
+        self.included_concretized_user_specs: Dict[str, List[Spec]] = {}
+        self.included_concretized_order: Dict[str, List[Spec]] = {}
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -1212,8 +1218,8 @@ class Environment:
 
         lockfile_meta = None
         self.included_concrete_specs = dict()
-        root_hash = set()
-        concrete_hash = set()
+        root_hash_seen = set()
+        concrete_hash_seen = set()
 
         for env_name in self.include_concrete:
             if os.sep in env_name:
@@ -1242,17 +1248,17 @@ class Environment:
             # Copy unique root specs from env
             self.included_concrete_specs[env_path] = {"roots": []}
             for root_dict in lockfile_as_dict["roots"]:
-                if root_dict["hash"] not in root_hash:
+                if root_dict["hash"] not in root_hash_seen:
                     self.included_concrete_specs[env_path]["roots"].append(root_dict)
-                    root_hash.add(root_dict["hash"])
+                    root_hash_seen.add(root_dict["hash"])
 
             # Copy unique concrete specs from env
             for concrete_spec in lockfile_as_dict["concrete_specs"]:
-                if concrete_spec not in concrete_hash:
+                if concrete_spec not in concrete_hash_seen:
                     self.included_concrete_specs[env_path].update(
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
-                    concrete_hash.add(concrete_spec)
+                    concrete_hash_seen.add(concrete_spec)
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
@@ -2852,7 +2858,9 @@ def no_active_environment():
 
 
 def initialize_environment_dir(
-    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]], include_concrete: [str]
+    environment_dir: Union[str, pathlib.Path],
+    envfile: Optional[Union[str, pathlib.Path]],
+    include_concrete: List[str]
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
@@ -3030,8 +3038,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         # if env doesn't exists
             # throw error
 
-        #config_dict(self.pristine_yaml_content).get("include_concrete", [])
-        #config_dict(self.pristine_yaml_content)["include-concrete"].append(root(env))
+        config_dict(self.pristine_yaml_content).get("include_concrete", [])
+        config_dict(self.pristine_yaml_content)["include-concrete"].append(root(env_name))
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
         """Appends a user spec to the first active definition matching the name passed as argument.

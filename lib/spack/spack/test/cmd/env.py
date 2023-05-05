@@ -1550,11 +1550,12 @@ def test_env_include_concrete_envs_lockfile():
 
     combined.concretize()
     combined.write()
+
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert lockfile_as_dict["include"][test1.path]["roots"][0]["hash"] in test1.specs_by_hash
-    assert lockfile_as_dict["include"][test2.path]["roots"][0]["hash"] in test2.specs_by_hash
+    assert set(entry["hash"] for entry in lockfile_as_dict["include"][test1.path]["roots"]) == set(test1.specs_by_hash)
+    assert set(entry["hash"] for entry in lockfile_as_dict["include"][test2.path]["roots"]) == set(test2.specs_by_hash)
 
 
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
@@ -1580,6 +1581,24 @@ def test_env_include_concrete_env_reconcretized(unify):
 
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
+
+
+def test_concretize_included_concrete_env():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    combined.concretize()
+    combined.write()
+
+    with test1:
+        add("zlib")
+    test1.concretize()
+
+    assert "zlib" not in combined.included_concretized_user_specs
+
+    combined.concretize()
+    combined.write()
+
+    assert "zlib" in combined.included_concretized_user_specs
 
 
 def test_env_config_view_default(

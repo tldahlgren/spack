@@ -381,6 +381,7 @@ env:
         output = find()
 
     assert "No root specs" in output
+    assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
 
