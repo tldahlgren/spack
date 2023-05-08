@@ -1579,7 +1579,8 @@ def test_env_include_concrete_env_reconcretized(unify):
     assert not lockfile_as_dict["concrete_specs"]
 
     combined.concretize()
-    combined = ev.read("combined_env")
+    combined.write()
+
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 

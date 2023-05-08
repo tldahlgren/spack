@@ -107,17 +107,8 @@ def check_disallowed_env_config_mods(scopes):
     return scopes
 
 
-def default_manifest_yaml(include_concrete: List[str] = None):  # Rikki fix this hacky mess :(
+def default_manifest_yaml():
     """default spack.yaml file to put in new environments"""
-    concrete_env = ""
-    if include_concrete:
-        concrete_env = "\n  include_concrete:"
-        for env in include_concrete:
-            if is_env_dir(env):
-                concrete_env += "\n  - {0}".format(env)
-            else:
-                concrete_env += "\n  - {0}".format(root(env))
-
     return """\
 # This is a Spack Environment file.
 #
@@ -128,9 +119,9 @@ spack:
   specs: []
   view: true
   concretizer:
-    unify: {0}{1}
+    unify: {}
 """.format(
-        "true" if spack.config.get("concretizer:unify") else "false", concrete_env
+        "true" if spack.config.get("concretizer:unify") else "false"
     )
 
 
@@ -294,7 +285,7 @@ def create(
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
-    include_concrete: List[str] = None,
+    include_concrete: List[str] = [],
 ) -> "Environment":
     """Create a managed environment in Spack and returns it.
 
@@ -327,7 +318,7 @@ def create_in_dir(
     init_file: Optional[Union[str, pathlib.Path]] = None,
     with_view: Optional[Union[str, pathlib.Path, bool]] = None,
     keep_relative: bool = False,
-    include_concrete: List[str] = None,
+    include_concrete: List[str] = [],
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
@@ -345,8 +336,8 @@ def create_in_dir(
     """
     initialize_environment_dir(root, envfile=init_file)
 
-    if with_view is None and keep_relative:
-        return Environment(root)
+    if with_view is None and keep_relative and not include_concrete:
+        return Environment(manifest_dir)
 
     try:
         manifest = EnvironmentManifestFile(root)
@@ -375,6 +366,12 @@ def create_in_dir(
 
     return env
 
+    if include_concrete:
+        manifest.set_include_concrete(include_concrete)
+
+    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
+        init_file = pathlib.Path(init_file)
+        manifest.absolutify_dev_paths(init_file.parent)
 
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
     """When initializing the environment from a manifest file and we plan
@@ -465,6 +462,7 @@ def _read_yaml(str_or_file):
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, "name", None)
+
     spack.config.validate(data, spack.schema.env.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
@@ -790,7 +788,7 @@ class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
     def __init__(
-        self, manifest_dir: Union[str, pathlib.Path], include_concrete: List[str] = None
+        self, manifest_dir: Union[str, pathlib.Path], include_concrete: Optional[str] = None
     ) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
@@ -1230,6 +1228,9 @@ class Environment:
 
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError("Unable to find env path: '%s'" % env_path)
+
+            # Chekc that env is already concretized
+                # Fail if not
 
             env = Environment(env_path)
             env.concretize(force=False)
@@ -2893,7 +2894,7 @@ def initialize_environment_dir(
 
     if envfile is None:
         _ensure_env_dir()
-        target_manifest.write_text(default_manifest_yaml(include_concrete))
+        target_manifest.write_text(default_manifest_yaml())
 
         return
 
@@ -3031,13 +3032,17 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg) from e
         self.changed = True
 
-    def add_include_concrete_env(self, env_name) -> None:
+    def set_include_concrete(self, include_concrete) -> None:
         """TODO Rikki: Give description"""
-        # if env doesn't exists
-        # throw error
 
-        config_dict(self.pristine_yaml_content).get("include_concrete", [])
-        config_dict(self.pristine_yaml_content)["include-concrete"].append(root(env_name))
+        config_dict(self.pristine_yaml_content)[included_concrete_name] = []
+        for env in include_concrete:
+            env_path = env
+            if exists(env):
+                env_path = root(env)
+
+            config_dict(self.pristine_yaml_content)[included_concrete_name].append(env_path)
+        self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
         """Appends a user spec to the first active definition matching the name passed as argument.
