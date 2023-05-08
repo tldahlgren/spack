@@ -1554,8 +1554,12 @@ def test_env_include_concrete_envs_lockfile():
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert set(entry["hash"] for entry in lockfile_as_dict["include"][test1.path]["roots"]) == set(test1.specs_by_hash)
-    assert set(entry["hash"] for entry in lockfile_as_dict["include"][test2.path]["roots"]) == set(test2.specs_by_hash)
+    assert set(entry["hash"] for entry in lockfile_as_dict["include"][test1.path]["roots"]) == set(
+        test1.specs_by_hash
+    )
+    assert set(entry["hash"] for entry in lockfile_as_dict["include"][test2.path]["roots"]) == set(
+        test2.specs_by_hash
+    )
 
 
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])

@@ -347,10 +347,7 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_concrete_env(
-    mutable_mock_env_path, config, mutable_mock_repo, tmpdir
-):
-
+def test_find_specs_include_concrete_env(mutable_mock_env_path, config, mutable_mock_repo, tmpdir):
     path = tmpdir.join("spack.yaml")
 
     with tmpdir.as_cwd():
