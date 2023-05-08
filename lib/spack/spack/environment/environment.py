@@ -127,8 +127,7 @@ spack:
   concretizer:
     unify: {0}{1}
 """.format(
-        "true" if spack.config.get("concretizer:unify") else "false",
-        concrete_env
+        "true" if spack.config.get("concretizer:unify") else "false", concrete_env
     )
 
 
@@ -851,9 +850,9 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(self,
-                 manifest_dir: Union[str, pathlib.Path],
-                 include_concrete: List[str] = None) -> None:
+    def __init__(
+        self, manifest_dir: Union[str, pathlib.Path], include_concrete: List[str] = None
+    ) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -2959,7 +2958,7 @@ def no_active_environment():
 def initialize_environment_dir(
     environment_dir: Union[str, pathlib.Path],
     envfile: Optional[Union[str, pathlib.Path]],
-    include_concrete: List[str]
+    include_concrete: List[str],
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
