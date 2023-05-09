@@ -1589,21 +1589,18 @@ def test_env_include_concrete_env_reconcretized(unify):
 
 
 def test_concretize_included_concrete_env():
-    test1, test2, combined = setup_combined_multiple_env()
-
-    combined.concretize()
-    combined.write()
+    test1, _, combined = setup_combined_multiple_env()
 
     with test1:
         add("zlib")
     test1.concretize()
 
-    assert "zlib" not in combined.included_concretized_user_specs
+    assert Spec("zlib") in test1.concretized_user_specs
+    assert Spec("zlib") not in combined.included_concretized_user_specs[test1.path]
 
     combined.concretize()
-    combined.write()
 
-    assert "zlib" in combined.included_concretized_user_specs
+    assert Spec("zlib") in combined.included_concretized_user_specs[test1.path]
 
 
 def test_env_config_view_default(

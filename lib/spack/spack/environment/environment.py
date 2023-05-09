@@ -332,7 +332,7 @@ def create_in_dir(
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
-        include_concrete: Rikki explain
+        include_concrete: concrete environment names/paths to be included
     """
     initialize_environment_dir(root, envfile=init_file)
 
@@ -788,7 +788,7 @@ class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
     def __init__(
-        self, manifest_dir: Union[str, pathlib.Path], include_concrete: Optional[str] = None
+        self, manifest_dir: Union[str, pathlib.Path]
     ) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
@@ -799,7 +799,6 @@ class Environment:
         self.path = os.path.abspath(str(manifest_dir))
 
         self.txlock = lk.Lock(self._transaction_lock_path)
-
 
         self.unify = None
         self.new_specs: List[Spec] = []
@@ -820,8 +819,12 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
+        #: User specs from included environments from the last concretization
         self.included_concretized_user_specs: Dict[str, List[Spec]] = {}
+        #: Roots associated from included environments with the last concretization, in order
         self.included_concretized_order: Dict[str, List[Spec]] = {}
+        #: Concretized specs by hash from the included environments
+        self.included_specs_by_hash: Dict[str, Spec] = {}
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -914,6 +917,12 @@ class Environment:
             )
         else:
             self.views = {}
+
+        # Retrieve the current concretization strategy
+        configuration = config_dict(self.manifest)
+
+        # Retrieve unification scheme for the concretizer
+        self.unify = spack.config.get("concretizer:unify", False)
 
         # Extract and process include_concrete
         # Grabs include_concrete specs and put in memory
@@ -1259,6 +1268,7 @@ class Environment:
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
                     concrete_hash_seen.add(concrete_spec)
+        self._read_lockfile_dict(self._to_lockfile_dict())
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.
@@ -1559,7 +1569,7 @@ class Environment:
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
             self.deconcretize(spec, concrete=False)
 
-        # If a combined env reconcretized the linked envs
+        # If a combined env check for updated spec in the linked envs
         if self.include_concrete:
             self.include_concrete_envs()
 
@@ -3032,10 +3042,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg) from e
         self.changed = True
 
-    def set_include_concrete(self, include_concrete) -> None:
-        """TODO Rikki: Give description"""
+    def set_include_concrete(self, include_concrete: List[str]) -> None:
+        """Sets the included concrete environments in the manifest to the value(s) passed as input.
 
+        Args:
+            include_concrete: list of concrete environments to include
+        """
         config_dict(self.pristine_yaml_content)[included_concrete_name] = []
+
         for env in include_concrete:
             env_path = env
             if exists(env):
