@@ -787,9 +787,7 @@ def _create_environment(path):
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
-    def __init__(
-        self, manifest_dir: Union[str, pathlib.Path]
-    ) -> None:
+    def __init__(self, manifest_dir: Union[str, pathlib.Path]) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
 
@@ -1239,7 +1237,7 @@ class Environment:
                 raise SpackEnvironmentError("Unable to find env path: '%s'" % env_path)
 
             # Chekc that env is already concretized
-                # Fail if not
+            # Fail if not
 
             env = Environment(env_path)
             env.concretize(force=False)
