@@ -1224,23 +1224,9 @@ class Environment:
         self.included_concrete_specs = dict()
         root_hash_seen = set()
         concrete_hash_seen = set()
-        non_concrete_envs = set()
 
-        for env_name in self.include_concrete:
-            # Check that included environment exsists
-            if is_env_dir(env_name):
-                env_path = env_name
-            elif exists(env_name):
-                env_path = root(env_name)
-            else:
-                raise SpackEnvironmentError("Unable to find env: '%s'" % env_name)
-
+        for env_path in self.include_concrete:
             env = Environment(env_path)
-
-            #Check that included environment is concrete & has a lockfile
-            if not os.path.exists(env.lock_path):
-                non_concrete_envs.add(env.name)
-                continue
 
             with open(env.lock_path) as f:
                 lockfile_as_dict = env._read_lockfile(f)
@@ -1265,15 +1251,6 @@ class Environment:
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
                     concrete_hash_seen.add(concrete_spec)
-
-        if non_concrete_envs:
-            msg = ("The following environment(s) are not concrete: {0}\n"
-                "Please run:".format(", ".join(non_concrete_envs)))
-
-            for env in non_concrete_envs:
-                msg += f"\n    `spack -e {env} concretize`"
-
-            raise SpackEnvironmentError(msg)
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()
@@ -3054,16 +3031,44 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """Sets the included concrete environments in the manifest to the value(s) passed as input.
 
         Args:
-            include_concrete: list of concrete environments to include
+            include_concrete: list of already existing concrete environments to include
+
+        Raises:
+            SpackEnvironmentError: if any included env doesn't exist or isn't concrete
         """
         config_dict(self.pristine_yaml_content)[included_concrete_name] = []
 
-        for env in include_concrete:
-            env_path = env
-            if exists(env):
-                env_path = root(env)
+        non_concrete_envs = set()
 
+        for i in range(len(include_concrete)):
+            env_name = include_concrete[i]
+
+            # Check that included env exists
+            if is_env_dir(env_name):
+                env_path = env_name
+            elif exists(env_name):
+                env_path = root(env_name)
+            else:
+                raise SpackEnvironmentError("Unable to find env: '%s'" % env_name)
+
+            # Check that included env is concrete
+            if not os.path.exists(Environment(env_path).lock_path):
+                non_concrete_envs.add(Environment(env_path).name)
+                continue
+
+            include_concrete[i] = env_path
+
+        if non_concrete_envs:
+            msg = ("The following environment(s) are not concrete: {0}\n"
+                "Please run:".format(", ".join(non_concrete_envs)))
+            for env in non_concrete_envs:
+                msg += f"\n    `spack -e {env} concretize`"
+
+            raise SpackEnvironmentError(msg)
+
+        for env_path in include_concrete:
             config_dict(self.pristine_yaml_content)[included_concrete_name].append(env_path)
+
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
