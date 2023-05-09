@@ -3059,8 +3059,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             include_concrete[i] = env_path
 
         if non_concrete_envs:
-            msg = ("The following environment(s) are not concrete: {0}\n"
-                "Please run:".format(", ".join(non_concrete_envs)))
+            msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
+                ", ".join(non_concrete_envs)
+            )
             for env in non_concrete_envs:
                 msg += f"\n    `spack -e {env} concretize`"
 
