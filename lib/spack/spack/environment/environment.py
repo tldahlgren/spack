@@ -931,7 +931,7 @@ class Environment:
             if self.include_concrete:
                 self.include_concrete_envs()
         except OSError as e:
-            raise SpackEnvironmentError("Unable to concretize included envs.\nError: {0}", e)
+            raise SpackEnvironmentError("Unable to copy included envs.\nError: {0}", e)
 
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
@@ -1224,24 +1224,23 @@ class Environment:
         self.included_concrete_specs = dict()
         root_hash_seen = set()
         concrete_hash_seen = set()
+        non_concrete_envs = set()
 
         for env_name in self.include_concrete:
-            if os.sep in env_name:
+            # Check that included environment exsists
+            if is_env_dir(env_name):
                 env_path = env_name
             elif exists(env_name):
                 env_path = root(env_name)
             else:
                 raise SpackEnvironmentError("Unable to find env: '%s'" % env_name)
 
-            if not is_env_dir(env_path):
-                raise SpackEnvironmentError("Unable to find env path: '%s'" % env_path)
-
-            # Chekc that env is already concretized
-            # Fail if not
-
             env = Environment(env_path)
-            env.concretize(force=False)
-            env.write()
+
+            #Check that included environment is concrete & has a lockfile
+            if not os.path.exists(env.lock_path):
+                non_concrete_envs.add(env.name)
+                continue
 
             with open(env.lock_path) as f:
                 lockfile_as_dict = env._read_lockfile(f)
@@ -1266,7 +1265,18 @@ class Environment:
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
                     concrete_hash_seen.add(concrete_spec)
+
+        if non_concrete_envs:
+            msg = ("The following environment(s) are not concrete: {0}\n"
+                "Please run:".format(", ".join(non_concrete_envs)))
+
+            for env in non_concrete_envs:
+                msg += f"\n    `spack -e {env} concretize`"
+
+            raise SpackEnvironmentError(msg)
+
         self._read_lockfile_dict(self._to_lockfile_dict())
+        self.write()
 
     def included_config_scopes(self):
         """List of included configuration scopes from the environment.

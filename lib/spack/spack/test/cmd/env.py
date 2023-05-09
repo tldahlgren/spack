@@ -474,9 +474,13 @@ def test_remove_command():
 
 def test_bad_remove_included_env():
     env("create", "test")
+    test = ev.read("test")
 
-    with ev.read("test"):
+    with test:
         add("mpileaks")
+
+    test.concretize()
+    test.write()
 
     env("create", "--include-concrete", "test", "combined_env")
 
@@ -486,9 +490,13 @@ def test_bad_remove_included_env():
 
 def test_force_remove_included_env():
     env("create", "test")
+    test = ev.read("test")
 
-    with ev.read("test"):
+    with test:
         add("mpileaks")
+
+    test.concretize()
+    test.write()
 
     env("create", "--include-concrete", "test", "combined_env")
 
@@ -1478,12 +1486,14 @@ def setup_combined_multiple_env():
     with test1:
         add("mpileaks")
     test1.concretize()
+    test1.write()
 
     env("create", "test2")
     test2 = ev.read("test2")
     with test2:
         add("libelf")
     test2.concretize()
+    test2.write()
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
     combined = ev.read("combined_env")
@@ -1497,6 +1507,8 @@ def test_env_include_concrete_env_yaml():
 
     with test:
         add("mpileaks")
+    test.concretize()
+    test.write()
 
     env("create", "--include-concrete", "test", "combined_env")
 
@@ -1513,6 +1525,8 @@ def test_env_include_concrete_env_path_yaml():
 
     with test:
         add("mpileaks")
+    test.concretize()
+    test.write()
 
     env("create", "--include-concrete", test.path, "combined_env")
 
@@ -1526,6 +1540,17 @@ def test_env_include_concrete_env_path_yaml():
 def test_env_include_bad_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
+
+
+def test_bad_env_include_not_concrete_env():
+    env("create", "test")
+    test = ev.read("test")
+
+    with test:
+        add("mpileaks")
+
+    with pytest.raises(ev.SpackEnvironmentError):
+        env("create", "--include-concrete", "test", "combined_env")
 
 
 def test_env_include_multiple_concrete_envs():
@@ -1548,12 +1573,10 @@ def test_env_include_concrete_envs_lockfile():
     assert "include_concrete" in combined_yaml
     assert test1.path in combined_yaml["include_concrete"]
 
-    combined.concretize()
-    combined.write()
-
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
+    # TODO: Rikki When included_specs_by_hash is updated use that for assertion
     assert set(entry["hash"] for entry in lockfile_as_dict["include"][test1.path]["roots"]) == set(
         test1.specs_by_hash
     )
@@ -1570,8 +1593,7 @@ def test_env_include_concrete_env_reconcretized(unify):
     _, _, combined = setup_combined_multiple_env()
 
     combined.unify = unify
-    combined.concretize()
-    combined.write()
+
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
@@ -1594,11 +1616,13 @@ def test_concretize_included_concrete_env():
     with test1:
         add("zlib")
     test1.concretize()
+    test1.write()
 
     assert Spec("zlib") in test1.concretized_user_specs
     assert Spec("zlib") not in combined.included_concretized_user_specs[test1.path]
 
     combined.concretize()
+    combined.write()
 
     assert Spec("zlib") in combined.included_concretized_user_specs[test1.path]
 
