@@ -822,7 +822,7 @@ class Environment:
         #: Roots associated from included environments with the last concretization, in order
         self.included_concretized_order: Dict[str, List[Spec]] = {}
         #: Concretized specs by hash from the included environments
-        self.included_specs_by_hash: Dict[str, Spec] = {}
+        self.included_specs_by_hash: Dict[str:Dict[str, Spec]] = {}
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -1016,7 +1016,6 @@ class Environment:
         self.specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
         self.included_concretized_user_specs = {}  # user specs from last concretize's included env
-        # TODO: Rikki, included_specs_by_hash keyed by env path for debugging
         self.included_concretized_order = {}  # root specs of the included envs, keyed by env path
         self.included_specs_by_hash = {}  # concretized specs by hash from the included envs
         self._repo = None  # RepoPath for this env (memoized)
@@ -2087,7 +2086,10 @@ class Environment:
                 if concretized_hash in self.specs_by_hash:
                     spec = self.specs_by_hash[concretized_hash]
                 else:
-                    spec = self.included_specs_by_hash[concretized_hash]
+                    for env_path in self.included_specs_by_hash.keys():
+                        if concretized_hash in self.included_specs_by_hash[env_path]:
+                            spec = self.included_specs_by_hash[env_path][concretized_hash]
+                            break
                 if not spec.installed or (
                     spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
                 ):
@@ -2172,8 +2174,8 @@ class Environment:
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        for included_concretized_order in self.included_concretized_order.values():
-            roots.extend([self.included_specs_by_hash[h] for h in included_concretized_order])
+        for env_path, included_concretized_order in self.included_concretized_order.items():
+            roots.extend([self.included_specs_by_hash[env_path][h] for h in included_concretized_order])
         specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
         specs.sort()
 
@@ -2219,7 +2221,11 @@ class Environment:
             if h in self.specs_by_hash:
                 yield (s, self.specs_by_hash[h])
             else:
-                yield (s, self.included_specs_by_hash[h])
+                s_by_h = self.included_specs_by_hash
+                for env_path in self.included_specs_by_hash.keys():
+                    if h in self.included_specs_by_hash[env_path]:
+                        yield (s, self.included_specs_by_hash[env_path][h])
+                        break
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
@@ -2455,9 +2461,10 @@ class Environment:
                 )
                 first_seen.update(filtered_spec)
 
-            for spec_hashes in self.included_concretized_order.values():
+            for env_path, spec_hashes in self.included_concretized_order.items():
+                self.included_specs_by_hash[env_path] = {}
                 for spec_dag_hash in spec_hashes:
-                    self.included_specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
+                    self.included_specs_by_hash[env_path].update({spec_dag_hash: first_seen[spec_dag_hash]})
 
     def filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest

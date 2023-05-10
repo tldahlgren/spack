@@ -1576,7 +1576,6 @@ def test_env_include_concrete_envs_lockfile():
     with open(combined.lock_path) as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    # TODO: Rikki When included_specs_by_hash is updated use that for assertion
     assert set(entry["hash"] for entry in lockfile_as_dict["include"][test1.path]["roots"]) == set(
         test1.specs_by_hash
     )
