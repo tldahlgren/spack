@@ -361,6 +361,10 @@ spack:
             )
         env("create", "test1", "spack.yaml")
 
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
     with tmpdir.as_cwd():
         with open(str(path), "w") as f:
             f.write(
@@ -371,6 +375,10 @@ env:
 """
             )
         env("create", "test2", "spack.yaml")
+
+    test2 = ev.read("test2")
+    test2.concretize()
+    test2.write()
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
 

@@ -334,7 +334,7 @@ def create_in_dir(
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
     """
-    initialize_environment_dir(root, envfile=init_file)
+    initialize_environment_dir(manifest_dir, envfile=init_file)
 
     if with_view is None and keep_relative and not include_concrete:
         return Environment(manifest_dir)
@@ -2855,7 +2855,6 @@ def no_active_environment():
 def initialize_environment_dir(
     environment_dir: Union[str, pathlib.Path],
     envfile: Optional[Union[str, pathlib.Path]],
-    include_concrete: List[str],
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
