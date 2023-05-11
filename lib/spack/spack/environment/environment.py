@@ -822,7 +822,7 @@ class Environment:
         #: Roots associated from included environments with the last concretization, in order
         self.included_concretized_order: Dict[str, List[Spec]] = {}
         #: Concretized specs by hash from the included environments
-        self.included_specs_by_hash: Dict[str:Dict[str, Spec]] = {}
+        self.included_specs_by_hash: Dict[str : Dict[str, Spec]] = {}
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -2175,7 +2175,9 @@ class Environment:
         """Return all specs, even those a user spec would shadow."""
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
         for env_path, included_concretized_order in self.included_concretized_order.items():
-            roots.extend([self.included_specs_by_hash[env_path][h] for h in included_concretized_order])
+            roots.extend(
+                [self.included_specs_by_hash[env_path][h] for h in included_concretized_order]
+            )
         specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
         specs.sort()
 
@@ -2464,7 +2466,9 @@ class Environment:
             for env_path, spec_hashes in self.included_concretized_order.items():
                 self.included_specs_by_hash[env_path] = {}
                 for spec_dag_hash in spec_hashes:
-                    self.included_specs_by_hash[env_path].update({spec_dag_hash: first_seen[spec_dag_hash]})
+                    self.included_specs_by_hash[env_path].update(
+                        {spec_dag_hash: first_seen[spec_dag_hash]}
+                    )
 
     def filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest
@@ -2860,8 +2864,7 @@ def no_active_environment():
 
 
 def initialize_environment_dir(
-    environment_dir: Union[str, pathlib.Path],
-    envfile: Optional[Union[str, pathlib.Path]],
+    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]]
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
