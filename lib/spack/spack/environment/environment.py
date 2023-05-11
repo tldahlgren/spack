@@ -462,7 +462,6 @@ def _read_yaml(str_or_file):
 def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, "name", None)
-
     spack.config.validate(data, spack.schema.env.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
@@ -822,7 +821,7 @@ class Environment:
         #: Roots associated from included environments with the last concretization, in order
         self.included_concretized_order: Dict[str, List[Spec]] = {}
         #: Concretized specs by hash from the included environments
-        self.included_specs_by_hash: Dict[str : Dict[str, Spec]] = {}
+        self.included_specs_by_hash: Dict[str, Dict[str, Spec]] = {}
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -2223,7 +2222,6 @@ class Environment:
             if h in self.specs_by_hash:
                 yield (s, self.specs_by_hash[h])
             else:
-                s_by_h = self.included_specs_by_hash
                 for env_path in self.included_specs_by_hash.keys():
                     if h in self.included_specs_by_hash[env_path]:
                         yield (s, self.included_specs_by_hash[env_path][h])
