@@ -768,6 +768,40 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
+
+------------------------------
+Included Concrete Environments
+------------------------------
+
+Spack environments can create an evironment based off of information in already
+established environments. You can think of it as a combination of existing
+environnments. It will gathering information from the existing environment's
+``spack.lock`` and use that during the creation of this included concrete
+environmenit.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating included environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create an included concrete environment, you must have at least one exsiting
+concrete environment. You will use the command ``spack env create`` with the
+argument ``--include-concrete`` followed by the name or path of the environment
+you'd like to include.
+
+.. code:: console
+   spack env create myenv
+   spack -e myenv add python
+   spack -e myenv concretize
+   spack env create --include-concrete myenv included_env
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating an included environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If changes were made to the base environment and you want that reflected in the
+included environment you will need to reconcretize both the base environment and the
+included environment for the change to be implemented.
+
 ----------------
 Filesystem Views
 ----------------
