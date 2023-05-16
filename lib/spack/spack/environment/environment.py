@@ -933,7 +933,7 @@ class Environment:
                 with open(self.lock_path) as f:
                     data = self._read_lockfile(f)
 
-                self.included_concrete_specs = data["include"]
+                self.included_concrete_specs = data[included_concrete_name]
             else:
                 self.include_concrete_envs()
 
@@ -1233,11 +1233,13 @@ class Environment:
             with open(env.lock_path) as f:
                 lockfile_as_dict = env._read_lockfile(f)
 
-            # Lockfile_meta must match each env
+            # Lockfile_meta must match each env and use at least format version 5
             if lockfile_meta is None:
                 lockfile_meta = lockfile_as_dict["_meta"]
             elif lockfile_meta != lockfile_as_dict["_meta"]:
-                tty.die("All lockfile _meta values must match")
+                raise SpackEnvironmentError("All lockfile _meta values must match")
+            elif lockfile_meta["lockfile-version"] < 5:
+                raise SpackEnvironmentError("The lockfile format must be at version 5 or higher")
 
             # Copy unique root specs from env
             self.included_concrete_specs[env_path] = {"roots": []}
@@ -2404,7 +2406,7 @@ class Environment:
         }
 
         if self.include_concrete:
-            data["include"] = self.included_concrete_specs
+            data[included_concrete_name] = self.included_concrete_specs
 
         return data
 
@@ -2427,8 +2429,8 @@ class Environment:
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
 
-        if "include" in d:
-            for env_name, env_info in d["include"].items():
+        if included_concrete_name in d:
+            for env_name, env_info in d[included_concrete_name].items():
                 self.included_concretized_order[env_name] = []
                 self.included_concretized_user_specs[env_name] = []
                 for root_info in env_info["roots"]:
