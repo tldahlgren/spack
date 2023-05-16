@@ -813,15 +813,16 @@ class Environment:
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
         self._repo = None
-        #: Previously active environment
-        self._previous_active = None
-        self._dev_specs = None
         #: User specs from included environments from the last concretization
         self.included_concretized_user_specs: Dict[str, List[Spec]] = {}
         #: Roots associated from included environments with the last concretization, in order
         self.included_concretized_order: Dict[str, List[Spec]] = {}
         #: Concretized specs by hash from the included environments
         self.included_specs_by_hash: Dict[str, Dict[str, Spec]] = {}
+        self.included_concrete_specs
+        #: Previously active environment
+        self._previous_active = None
+        self._dev_specs = None
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
@@ -926,11 +927,14 @@ class Environment:
         if not self.include_concrete:
             self.include_concrete = config_dict(self.manifest).get(included_concrete_name, [])
 
-        try:
-            if self.include_concrete:
+        if self.include_concrete:
+            if os.path.exists(self.lock_path):
+                with open(self.lock_path) as f:
+                    data = self._read_lockfile(f)
+
+                self.included_concrete_specs = data["include"]
+            else:
                 self.include_concrete_envs()
-        except OSError as e:
-            raise SpackEnvironmentError("Unable to copy included envs.\nError: {0}", e)
 
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
