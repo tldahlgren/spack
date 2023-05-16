@@ -819,7 +819,8 @@ class Environment:
         self.included_concretized_order: Dict[str, List[Spec]] = {}
         #: Concretized specs by hash from the included environments
         self.included_specs_by_hash: Dict[str, Dict[str, Spec]] = {}
-        self.included_concrete_specs
+        #: Concretized specs from lockfile of included environments
+        self.included_concrete_specs: Dict[str, Dict[str, List[str]]] = {}
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
@@ -1223,7 +1224,6 @@ class Environment:
         specs internally"""
 
         lockfile_meta = None
-        self.included_concrete_specs = dict()
         root_hash_seen = set()
         concrete_hash_seen = set()
 

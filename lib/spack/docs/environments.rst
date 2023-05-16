@@ -790,6 +790,7 @@ argument ``--include-concrete`` followed by the name or path of the environment
 you'd like to include.
 
 .. code:: console
+
    $ spack env create myenv
    $ spack -e myenv add python
    $ spack -e myenv concretize
@@ -804,6 +805,7 @@ included environment you will need to reconcretize both the base environment and
 included environment for the change to be implemented. For example
 
 .. code:: console
+
    $ spack env create myenv
    $ spack -e myenv add python
    $ spack -e myenv concretize
@@ -854,7 +856,6 @@ included environment for the change to be implemented. For example
    perl  python
 
    ==> 0 installed packages
-
 
 ----------------
 Filesystem Views
