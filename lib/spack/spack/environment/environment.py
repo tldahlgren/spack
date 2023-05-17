@@ -423,7 +423,7 @@ def ensure_included_envs_exist(include_concrete: List[str]) -> None:
     """Checks that all of the included environments exist
 
     Args:
-       include_concrete: list of already existing concrete environments to include 
+       include_concrete: list of already existing concrete environments to include
 
     Raises:
         SpackEnvironmentError: if any of the included environments do not exist
@@ -432,19 +432,17 @@ def ensure_included_envs_exist(include_concrete: List[str]) -> None:
     missing_envs = set()
 
     for i in range(len(include_concrete)):
-            env_name = include_concrete[i]
+        env_name = include_concrete[i]
 
-            if is_env_dir(env_name):
-                include_concrete[i] = env_name
-            elif exists(env_name):
-                include_concrete[i] = root(env_name)
-            else:
-                missing_envs.add(env_name)
+        if is_env_dir(env_name):
+            include_concrete[i] = env_name
+        elif exists(env_name):
+            include_concrete[i] = root(env_name)
+        else:
+            missing_envs.add(env_name)
 
     if missing_envs:
-        msg = "The following environment(s) are not missing: {0}".format(
-                ", ".join(missing_envs)
-            )
+        msg = "The following environment(s) are not missing: {0}".format(", ".join(missing_envs))
         raise SpackEnvironmentError(msg)
 
 
@@ -461,7 +459,6 @@ def ensure_included_envs_concrete(include_concrete: List[str]) -> None:
     non_concrete_envs = set()
 
     for env_path in include_concrete:
-
         if not os.path.exists(Environment(env_path).lock_path):
             non_concrete_envs.add(Environment(env_path).name)
             continue
@@ -1283,7 +1280,6 @@ class Environment:
         concrete_hash_seen = set()
 
         for env_path in self.include_concrete:
-
             # Check that environment exists
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
