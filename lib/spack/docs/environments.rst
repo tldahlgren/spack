@@ -448,6 +448,23 @@ you'd like to include.
    $ spack env create --include-concrete myenv included_env
 
 
+You can also create an included environment by adding the ``include_concrete``
+heading in the yaml.
+
+.. code-block:: yaml
+
+   spack:
+     specs: []
+     concretizer:
+         unify: true
+     include_concrete:
+     - /absolute/path/to/environment1
+     - /absolute/path/to/environment2
+
+
+Once the ``spack.yaml`` has been updated you must concretize the environment to
+get the concrete specs from the included environments.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Updating an included environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
