@@ -933,7 +933,8 @@ class Environment:
                 with open(self.lock_path) as f:
                     data = self._read_lockfile(f)
 
-                self.included_concrete_specs = data[included_concrete_name]
+                if included_concrete_name in data:
+                    self.included_concrete_specs = data[included_concrete_name]
             else:
                 self.include_concrete_envs()
 
@@ -1223,12 +1224,23 @@ class Environment:
         """Concretize included envs and save the included envs'
         specs internally"""
 
+        non_concrete_envs = set()
         lockfile_meta = None
         root_hash_seen = set()
         concrete_hash_seen = set()
 
         for env_path in self.include_concrete:
+
+            # Check that environment exists
+            if not is_env_dir(env_path):
+                raise SpackEnvironmentError(f"Unable to find env at {env_path}")
+
             env = Environment(env_path)
+
+            # Check that environment is concrete
+            if not os.path.exists(env.lock_path):
+                non_concrete_envs.add(env.name)
+                continue
 
             with open(env.lock_path) as f:
                 lockfile_as_dict = env._read_lockfile(f)
@@ -1255,6 +1267,15 @@ class Environment:
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
                     concrete_hash_seen.add(concrete_spec)
+
+        if non_concrete_envs:
+            msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
+                ", ".join(non_concrete_envs)
+            )
+            for env in non_concrete_envs:
+                msg += f"\n    `spack -e {env} concretize`"
+
+            raise SpackEnvironmentError(msg)
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()
