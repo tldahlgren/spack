@@ -334,22 +334,17 @@ def create_in_dir(
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
     """
-    initialize_environment_dir(manifest_dir, envfile=init_file)
 
     if with_view is None and keep_relative and not include_concrete:
+        initialize_environment_dir(manifest_dir, envfile=init_file)
         return Environment(manifest_dir)
 
-    try:
-        manifest = EnvironmentManifestFile(root)
+    if include_concrete:
+        ensure_included_envs_exist(include_concrete)
+        ensure_included_envs_concrete(include_concrete)
 
-        if with_view is not None:
-            manifest.set_default_view(with_view)
-
-        manifest.flush()
-
-    except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
-        shutil.rmtree(root)
-        raise e
+    initialize_environment_dir(manifest_dir, envfile=init_file)
+    manifest = EnvironmentManifestFile(manifest_dir)
 
     env = Environment(root)
 
@@ -366,7 +361,7 @@ def create_in_dir(
 
     return env
 
-    if include_concrete:
+    if include_concrete is not None:
         manifest.set_include_concrete(include_concrete)
 
     if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
@@ -422,6 +417,64 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
+
+
+def ensure_included_envs_exist(include_concrete: List[str]) -> None:
+    """Checks that all of the included environments exist
+
+    Args:
+       include_concrete: list of already existing concrete environments to include 
+
+    Raises:
+        SpackEnvironmentError: if any of the included environments do not exist
+    """
+
+    missing_envs = set()
+
+    for i in range(len(include_concrete)):
+            env_name = include_concrete[i]
+
+            if is_env_dir(env_name):
+                include_concrete[i] = env_name
+            elif exists(env_name):
+                include_concrete[i] = root(env_name)
+            else:
+                missing_envs.add(env_name)
+
+    if missing_envs:
+        msg = "The following environment(s) are not missing: {0}".format(
+                ", ".join(missing_envs)
+            )
+        raise SpackEnvironmentError(msg)
+
+
+def ensure_included_envs_concrete(include_concrete: List[str]) -> None:
+    """Checks that all of the included environments are concrete
+
+    Args:
+        include_concrete: list of already existing concrete environments to include
+
+    Raises:
+        SpackEnvironmentError: if any of the included environments are not concrete
+    """
+
+    non_concrete_envs = set()
+
+    for env_path in include_concrete:
+
+        if not os.path.exists(Environment(env_path).lock_path):
+            non_concrete_envs.add(Environment(env_path).name)
+            continue
+
+    if non_concrete_envs:
+        msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
+            ", ".join(non_concrete_envs)
+        )
+        for env in non_concrete_envs:
+            msg += f"\n\t`spack -e {env} concretize`"
+
+        raise SpackEnvironmentError(msg)
+
 
 def all_environment_names():
     """List the names of environments that currently exist."""
@@ -3066,40 +3119,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         Args:
             include_concrete: list of already existing concrete environments to include
-
-        Raises:
-            SpackEnvironmentError: if any included env doesn't exist or isn't concrete
         """
         config_dict(self.pristine_yaml_content)[included_concrete_name] = []
-
-        non_concrete_envs = set()
-
-        for i in range(len(include_concrete)):
-            env_name = include_concrete[i]
-
-            # Check that included env exists
-            if is_env_dir(env_name):
-                env_path = env_name
-            elif exists(env_name):
-                env_path = root(env_name)
-            else:
-                raise SpackEnvironmentError("Unable to find env: '%s'" % env_name)
-
-            # Check that included env is concrete
-            if not os.path.exists(Environment(env_path).lock_path):
-                non_concrete_envs.add(Environment(env_path).name)
-                continue
-
-            include_concrete[i] = env_path
-
-        if non_concrete_envs:
-            msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
-                ", ".join(non_concrete_envs)
-            )
-            for env in non_concrete_envs:
-                msg += f"\n    `spack -e {env} concretize`"
-
-            raise SpackEnvironmentError(msg)
 
         for env_path in include_concrete:
             config_dict(self.pristine_yaml_content)[included_concrete_name].append(env_path)
