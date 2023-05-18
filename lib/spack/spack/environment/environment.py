@@ -361,7 +361,7 @@ def create_in_dir(
 
     return env
 
-    if include_concrete is not None:
+    if include_concrete:
         manifest.set_include_concrete(include_concrete)
 
     if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
