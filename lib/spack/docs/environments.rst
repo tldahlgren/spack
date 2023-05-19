@@ -424,12 +424,12 @@ file may also be copied out of the environment, renamed, etc.
 Included Concrete Environments
 ------------------------------
 
-Spack environments can create an evironment based off of information in already
+Spack environments can create an environment based off of information in already
 established environments. You can think of it as a combination of existing
-environnments. It will gathering information from the existing environment's
+environments. It will gather information from the existing environment's
 ``spack.lock`` and use that during the creation of this included concrete
-environmenit. When an included concrete environment is create it will generate
-a ``spack.lock`` file.
+environment. When an included concrete environment is created it will generate
+a ``spack.lock`` file for the newly created environment.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
