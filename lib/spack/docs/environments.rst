@@ -433,14 +433,15 @@ a ``spack.lock`` file.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating included environment
+Creating included environments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To create an included concrete environment, you must have at least one exsiting
+To create a combined concrete environment, you must have at least one exsiting
 concrete environment. You will use the command ``spack env create`` with the
 argument ``--include-concrete`` followed by the name or path of the environment
-you'd like to include.
+you'd like to include. Here is an example of how to create a combined environment
+from the command line.
 
-.. code:: console
+.. code-block:: console
 
    $ spack env create myenv
    $ spack -e myenv add python
@@ -448,8 +449,9 @@ you'd like to include.
    $ spack env create --include-concrete myenv included_env
 
 
-You can also create an included environment by adding the ``include_concrete``
-heading in the yaml.
+You can also create an included environment through the ``spack.yaml`` file. It
+involves adding the ``include_concrete`` heading in the yaml followed by the
+absolute path to the independent environments.
 
 .. code-block:: yaml
 
@@ -472,7 +474,7 @@ If changes were made to the base environment and you want that reflected in the
 included environment you will need to reconcretize both the base environment and the
 included environment for the change to be implemented. For example:
 
-.. code:: console
+.. code-block:: console
 
    $ spack env create myenv
    $ spack -e myenv add python
@@ -496,6 +498,11 @@ included environment for the change to be implemented. For example:
 
    ==> 0 installed packages
 
+Here we see that included_env has access to the python packge through the myenv
+environment. But if we were to add another spec tp myenv, included_env will not
+be able to access the new information.
+
+.. code-block:: console
 
    $ spack -e myenv add perl
    $ spack -e myenv concretize
@@ -511,6 +518,23 @@ included environment for the change to be implemented. For example:
    ==> In environment included_env
    ==> No root specs
    ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+It isn't until you run the ``spack concretize`` command that the combined
+environment will get the updated information from the reconcretized base environmennt.
+
+.. code-block:: console
+
+   $ spack -e included_env concretize
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   perl  python
+
+   ==> 0 installed packages
 
 .. _environment-configuration:
 
@@ -863,65 +887,6 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Updating an included environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If changes were made to the base environment and you want that reflected in the
-included environment you will need to reconcretize both the base environment and the
-included environment for the change to be implemented. For example
-
-.. code:: console
-
-   $ spack env create myenv
-   $ spack -e myenv add python
-   $ spack -e myenv concretize
-   $ spack env create --include-concrete myenv included_env
-
-
-   $ spack -e myenv find
-   ==> In environment myenv
-   ==> Root specs
-   python
-
-   ==> 0 installed packages
-
-
-   $ spack -e included_env find
-   ==> In environment included_env
-   ==> No root specs
-   ==> Included specs
-   python
-
-   ==> 0 installed packages
-
-
-   $ spack -e myenv add perl
-   $ spack -e myenv concretize
-   $ spack -e myenv find
-   ==> In environment myenv
-   ==> Root specs
-   perl  python
-
-   ==> 0 installed packages
-
-
-   $ spack -e included_env find
-   ==> In environment included_env
-   ==> No root specs
-   ==> Included specs
-   python
-
-   ==> 0 installed packages
-
-
-   $ spack -e included_env concretize
-   $ spack -e included_env find
-   ==> In environment included_env
-   ==> No root specs
-   ==> Included specs
-   perl  python
-
-   ==> 0 installed packages
 
 ----------------
 Filesystem Views

@@ -79,6 +79,12 @@ upgrade Spack to use them.
      - ✅
      - ✅
      -
+   * - ``v0.21:``
+     - ✅
+     - ✅
+     - ✅
+     - ✅
+     - ✅
 
 Version 1
 ---------
@@ -350,7 +356,7 @@ Version 5
 
 Version 5 doesn't change the top-level lockfile format, but an optional dictionary is
 added. The dictionary has the ``root`` and ``concrete_specs`` of the included
-environments and they are keyed by the path to that environment. Since this is optional
+environments and which are keyed by the path to that environment. Since this is optional
 if the environment does not have any included environments ``include_concrete`` will
 not be a part of the lockfile.
 
