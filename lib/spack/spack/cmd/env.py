@@ -413,9 +413,9 @@ def env_remove(args):
         environ = ev.Environment(ev.root(name))
         if ev.root(env_name) in environ.include_concrete:
             if args.force:
-                tty.warn(f"Environment \"{env_name}\" is being used by environment \"{name}\"")
+                tty.warn(f'Environment "{env_name}" is being used by environment "{name}"')
             else:
-                tty.die(f"Environment \"{env_name}\" is being used by environment \"{name}\"")
+                tty.die(f'Environment "{env_name}" is being used by environment "{name}"')
 
     if not args.yes_to_all:
         environments = string.plural(len(args.rm_env), "environment", show_n=False)
