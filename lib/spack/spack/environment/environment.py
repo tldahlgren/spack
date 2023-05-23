@@ -119,7 +119,7 @@ spack:
   specs: []
   view: true
   concretizer:
-    unify: {0}
+    unify: {}
 """.format(
         "true" if spack.config.get("concretizer:unify") else "false"
     )
@@ -417,14 +417,6 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
-    #=======
-    #def create(name, init_file=None, with_view=None, keep_relative=False, include_concrete=None):
-    #    """Create a named environment in Spack."""
-    #    validate_env_name(name)
-    #    if exists(name):
-    #        raise SpackEnvironmentError("'%s': environment already exists" % name)
-    #    return Environment(root(name), init_file, with_view, keep_relative, include_concrete)
-    #>>>>>>> eca33289ba (Design Update)
 
 
 def ensure_included_envs_exist(include_concrete: List[str]) -> None:
