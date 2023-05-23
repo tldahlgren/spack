@@ -107,14 +107,8 @@ def check_disallowed_env_config_mods(scopes):
     return scopes
 
 
-def default_manifest_yaml(include_concrete: [str]): # Rikki add include_concrete parameter???
+def default_manifest_yaml():
     """default spack.yaml file to put in new environments"""
-    concrete_env = ""
-    if include_concrete:
-        concrete_env = "\n  include_concrete:"
-        for env in include_concrete:
-            concrete_env += "\n  - {0}".format(env)
-
     return """\
 # This is a Spack Environment file.
 #
@@ -125,9 +119,9 @@ spack:
   specs: []
   view: true
   concretizer:
-    unify: {0}{1}
+    unify: {0}
 """.format(
-        "true" if spack.config.get("concretizer:unify") else "false", concrete_env
+        "true" if spack.config.get("concretizer:unify") else "false"
     )
 
 
@@ -851,7 +845,7 @@ class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
     def __init__(
-        self, manifest_dir: Union[str, pathlib.Path], include_concrete: List[str] = None
+        self, manifest_dir: Union[str, pathlib.Path]
     ) -> None:
         """An environment can be constructed from a directory containing a "spack.yaml" file, and
         optionally a consistent "spack.lock" file.
@@ -862,8 +856,6 @@ class Environment:
         self.path = os.path.abspath(str(manifest_dir))
 
         self.txlock = lk.Lock(self._transaction_lock_path)
-
-        self.include_concrete = include_concrete
 
         self.unify = None
         self.new_specs: List[Spec] = []
@@ -2958,7 +2950,6 @@ def no_active_environment():
 def initialize_environment_dir(
     environment_dir: Union[str, pathlib.Path],
     envfile: Optional[Union[str, pathlib.Path]],
-    include_concrete: List[str],
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
