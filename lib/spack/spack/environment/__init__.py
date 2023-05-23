@@ -33,8 +33,8 @@ contents have.  Lockfiles are JSON-formatted and their top-level sections are:
       * ``hash``: a Spack spec hash uniquely identifying the concrete root spec
       * ``spec``: a string representation of the abstract spec that was concretized
 
-  4. ``concrete_specs``: a dictionary containing the specs in the environment.
-  5. ``include_concrete`` (dictionary): an optional dictionary that includes the roots
+  3. ``concrete_specs``: a dictionary containing the specs in the environment.
+  4. ``include_concrete`` (dictionary): an optional dictionary that includes the roots
      and concrete specs from the included environments, keyed by the path to that
      environment
 
