@@ -3110,11 +3110,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.pristine_yaml_content[included_concrete_name] = []
+        self.pristine_configuration[included_concrete_name] = []
 
         for env_path in include_concrete:
-            self.pristine_yaml_content[included_concrete_name].append(env_path)
-
+            self.pristine_configuration[included_concrete_name].append(env_path)
 
         self.changed = True
 

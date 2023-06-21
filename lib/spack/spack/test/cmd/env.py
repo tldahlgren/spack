@@ -1513,7 +1513,7 @@ def test_env_include_concrete_env_yaml():
     env("create", "--include-concrete", "test", "combined_env")
 
     combined = ev.read("combined_env")
-    combined_yaml = ev.config_dict(combined.manifest)
+    combined_yaml = combined.manifest["spack"]
 
     assert "include_concrete" in combined_yaml
     assert test.path in combined_yaml["include_concrete"]
@@ -1531,7 +1531,7 @@ def test_env_include_concrete_env_path_yaml():
     env("create", "--include-concrete", test.path, "combined_env")
 
     combined = ev.read("combined_env")
-    combined_yaml = ev.config_dict(combined.manifest)
+    combined_yaml = combined.manifest["spack"]
 
     assert "include_concrete" in combined_yaml
     assert test.path in combined_yaml["include_concrete"]
@@ -1556,7 +1556,7 @@ def test_bad_env_include_not_concrete_env():
 def test_env_include_multiple_concrete_envs():
     test1, test2, combined = setup_combined_multiple_env()
 
-    combined_yaml = ev.config_dict(combined.manifest)
+    combined_yaml = combined.manifest["spack"]
 
     assert test1.path in combined_yaml["include_concrete"][0]
     assert test2.path in combined_yaml["include_concrete"][1]
@@ -1568,7 +1568,7 @@ def test_env_include_multiple_concrete_envs():
 def test_env_include_concrete_envs_lockfile():
     test1, test2, combined = setup_combined_multiple_env()
 
-    combined_yaml = ev.config_dict(combined.manifest)
+    combined_yaml = combined.manifest["spack"]
 
     assert "include_concrete" in combined_yaml
     assert test1.path in combined_yaml["include_concrete"]
