@@ -369,7 +369,7 @@ spack:
         with open(str(path), "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - libelf
 """
