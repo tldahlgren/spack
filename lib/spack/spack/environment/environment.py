@@ -967,16 +967,13 @@ class Environment:
         else:
             self.views = {}
 
-        # Retrieve the current concretization strategy
-        configuration = config_dict(self.manifest)
-
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
 
         # Extract and process include_concrete
         # Grabs include_concrete specs and put in memory
         if not self.include_concrete:
-            self.include_concrete = config_dict(self.manifest).get(included_concrete_name, [])
+            self.include_concrete = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
 
         if self.include_concrete:
             if os.path.exists(self.lock_path):
@@ -987,9 +984,6 @@ class Environment:
                     self.included_concrete_specs = data[included_concrete_name]
             else:
                 self.include_concrete_envs()
-
-        # Retrieve unification scheme for the concretizer
-        self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
         self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
@@ -3116,10 +3110,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        config_dict(self.pristine_yaml_content)[included_concrete_name] = []
+        self.pristine_yaml_content[included_concrete_name] = []
 
         for env_path in include_concrete:
-            config_dict(self.pristine_yaml_content)[included_concrete_name].append(env_path)
+            self.pristine_yaml_content[included_concrete_name].append(env_path)
+
 
         self.changed = True
 
