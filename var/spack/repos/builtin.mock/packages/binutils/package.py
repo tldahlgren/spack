@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Binutils(Package):
+from spack.package import *
 
+
+class Binutils(Package):
     homepage = "example.com"
     url = "fake.com"
 

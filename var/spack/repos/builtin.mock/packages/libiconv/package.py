@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Libiconv(Package):
+from spack.package import *
 
+
+class Libiconv(Package):
     homepage = "example.com"
     url = "fake.com"
 

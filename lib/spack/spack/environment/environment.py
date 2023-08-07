@@ -1060,7 +1060,7 @@ class Environment:
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
-        self.included_concrete_specs = {} # concretized specs from lockfile of included envs
+        self.included_concrete_specs = {}  # concretized specs from lockfile of included envs
         self.included_concretized_user_specs = {}  # user specs from last concretize's included env
         self.included_concretized_order = {}  # root specs of the included envs, keyed by env path
         self.included_specs_by_hash = {}  # concretized specs by hash from the included envs
