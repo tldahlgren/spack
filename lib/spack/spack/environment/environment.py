@@ -340,8 +340,8 @@ def create_in_dir(
         return Environment(manifest_dir)
 
     if include_concrete:
-        ensure_included_envs_exist(include_concrete)
-        ensure_included_envs_concrete(include_concrete)
+        validate_included_envs_exists(include_concrete)
+        validate_included_envs_concrete(include_concrete)
 
     initialize_environment_dir(manifest_dir, envfile=init_file)
     manifest = EnvironmentManifestFile(manifest_dir)
@@ -419,7 +419,7 @@ def ensure_env_root_path_exists():
         fs.mkdirp(env_root_path())
 
 
-def ensure_included_envs_exist(include_concrete: List[str]) -> None:
+def validate_included_envs_exists(include_concrete: List[str]) -> None:
     """Checks that all of the included environments exist
 
     Args:
@@ -431,9 +431,7 @@ def ensure_included_envs_exist(include_concrete: List[str]) -> None:
 
     missing_envs = set()
 
-    for i in range(len(include_concrete)):
-        env_name = include_concrete[i]
-
+    for i, env_name in enumerate(include_concrete):
         if is_env_dir(env_name):
             include_concrete[i] = env_name
         elif exists(env_name):
@@ -446,7 +444,7 @@ def ensure_included_envs_exist(include_concrete: List[str]) -> None:
         raise SpackEnvironmentError(msg)
 
 
-def ensure_included_envs_concrete(include_concrete: List[str]) -> None:
+def validate_included_envs_concrete(include_concrete: List[str]) -> None:
     """Checks that all of the included environments are concrete
 
     Args:
@@ -461,7 +459,6 @@ def ensure_included_envs_concrete(include_concrete: List[str]) -> None:
     for env_path in include_concrete:
         if not os.path.exists(Environment(env_path).lock_path):
             non_concrete_envs.add(Environment(env_path).name)
-            continue
 
     if non_concrete_envs:
         msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
@@ -972,8 +969,7 @@ class Environment:
 
         # Extract and process include_concrete
         # Grabs include_concrete specs and put in memory
-        if not self.include_concrete:
-            self.include_concrete = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        self.include_concrete = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
 
         if self.include_concrete:
             if os.path.exists(self.lock_path):
@@ -995,18 +991,18 @@ class Environment:
                 self.dev_specs[name]["path"] = name
 
     def all_concretized_user_specs(self):
-        included_concretized_user_specs = []
-        for concretized_user_specs in self.included_concretized_user_specs.values():
-            included_concretized_user_specs.extend(concretized_user_specs)
+        concretized_user_specs = self.concretized_user_specs[:]
+        for included_concretized_user_specs in self.included_concretized_user_specs.values():
+            concretized_user_specs.extend(included_concretized_user_specs)
 
-        return self.concretized_user_specs + included_concretized_user_specs
+        return concretized_user_specs
 
     def all_concretized_orders(self):
-        included_concretized_order = []
-        for concretized_orders in self.included_concretized_order.values():
-            included_concretized_order.extend(concretized_orders)
+        concretized_order = self.concretized_order[:]
+        for included_concretized_order in self.included_concretized_order.values():
+            concretized_order.extend(included_concretized_order)
 
-        return self.concretized_order + included_concretized_order
+        return concretized_order
 
     @property
     def user_specs(self):
@@ -1064,6 +1060,7 @@ class Environment:
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
         self.invalidate_repository_cache()
+        self.included_concrete_specs = {} # concretized specs from lockfile of included envs
         self.included_concretized_user_specs = {}  # user specs from last concretize's included env
         self.included_concretized_order = {}  # root specs of the included envs, keyed by env path
         self.included_specs_by_hash = {}  # concretized specs by hash from the included envs

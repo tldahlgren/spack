@@ -59,6 +59,27 @@ module = SpackCommand("module")
 sep = os.sep
 
 
+def setup_combined_multiple_env():
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("mpileaks")
+    test1.concretize()
+    test1.write()
+
+    env("create", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+    combined = ev.read("combined_env")
+
+    return test1, test2, combined
+
+
 @pytest.fixture()
 def environment_from_manifest(tmp_path):
     """Returns a new environment named 'test' from the content of a manifest file."""
@@ -500,11 +521,11 @@ def test_force_remove_included_env():
 
     env("create", "--include-concrete", "test", "combined_env")
 
-    output = env("remove", "-f", "-y", "test")
-    out = env("list")
+    rm_output = env("remove", "-f", "-y", "test")
+    list_output = env("list")
 
-    assert '"test" is being used by environment "combined_env"' in output
-    assert "test" not in out
+    assert '"test" is being used by environment "combined_env"' in rm_output
+    assert "test" not in list_output
 
 
 def test_environment_status(capsys, tmpdir):
@@ -1478,27 +1499,6 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     # After enabling the view, the specs should be linked into the environment
     # view dir
     check_mpileaks_and_deps_in_view(view_dir)
-
-
-def setup_combined_multiple_env():
-    env("create", "test1")
-    test1 = ev.read("test1")
-    with test1:
-        add("mpileaks")
-    test1.concretize()
-    test1.write()
-
-    env("create", "test2")
-    test2 = ev.read("test2")
-    with test2:
-        add("libelf")
-    test2.concretize()
-    test2.write()
-
-    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
-    combined = ev.read("combined_env")
-
-    return test1, test2, combined
 
 
 def test_env_include_concrete_env_yaml():
