@@ -335,11 +335,14 @@ def create_in_dir(
         include_concrete: concrete environment names/paths to be included
     """
 
+    # Explain: need to validate included envs (if there are any) before initializing
+    # the environment so we don't have an empty directory
     if with_view is None and keep_relative and not include_concrete:
         initialize_environment_dir(manifest_dir, envfile=init_file)
         return Environment(manifest_dir)
 
     if include_concrete:
+        set_included_envs_to_env_paths(include_concrete)
         validate_included_envs_exists(include_concrete)
         validate_included_envs_concrete(include_concrete)
 
@@ -361,6 +364,7 @@ def create_in_dir(
 
     return env
 
+    # Must be done after environment is initialized
     if include_concrete:
         manifest.set_include_concrete(include_concrete)
 
@@ -419,6 +423,16 @@ def ensure_env_root_path_exists():
         fs.mkdirp(env_root_path())
 
 
+def set_included_envs_to_env_paths(include_concrete: List[str]) -> None:
+    """This does a thing""" # TODO: Fill out
+
+    for i, env_name in enumerate(include_concrete):
+        if is_env_dir(env_name):
+            include_concrete[i] = env_name
+        elif exists(env_name):
+            include_concrete[i] = root(env_name)
+
+
 def validate_included_envs_exists(include_concrete: List[str]) -> None:
     """Checks that all of the included environments exist
 
@@ -432,15 +446,11 @@ def validate_included_envs_exists(include_concrete: List[str]) -> None:
     missing_envs = set()
 
     for i, env_name in enumerate(include_concrete):
-        if is_env_dir(env_name):
-            include_concrete[i] = env_name
-        elif exists(env_name):
-            include_concrete[i] = root(env_name)
-        else:
+        if not is_env_dir(env_name):
             missing_envs.add(env_name)
 
     if missing_envs:
-        msg = "The following environment(s) are not missing: {0}".format(", ".join(missing_envs))
+        msg = "The following environment(s) are missing: {0}".format(", ".join(missing_envs))
         raise SpackEnvironmentError(msg)
 
 
@@ -844,7 +854,7 @@ class Environment:
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
-        self.unify = None
+        self._unify = None
         self.new_specs: List[Spec] = []
         self.new_installs: List[Spec] = []
         self.views: Dict[str, ViewDescriptor] = {}
@@ -965,7 +975,8 @@ class Environment:
             self.views = {}
 
         # Retrieve unification scheme for the concretizer
-        self.unify = spack.config.get("concretizer:unify", False)
+        self._unify = spack.config.get("concretizer:unify", False)
+
 
         # Extract and process include_concrete
         # Grabs include_concrete specs and put in memory
