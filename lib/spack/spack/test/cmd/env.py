@@ -63,7 +63,7 @@ def setup_combined_multiple_env():
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
-        add("mpileaks")
+        add("libiconv")
     test1.concretize()
     test1.write()
 
@@ -1537,12 +1537,12 @@ def test_env_include_concrete_env_path_yaml():
     assert test.path in combined_yaml["include_concrete"]
 
 
-def test_env_include_bad_concrete_env():
+def test_env_bad_include_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
 
 
-def test_bad_env_include_not_concrete_env():
+def test_env_not_concrete_include_concrete_env():
     env("create", "test")
     test = ev.read("test")
 
@@ -1553,7 +1553,7 @@ def test_bad_env_include_not_concrete_env():
         env("create", "--include-concrete", "test", "combined_env")
 
 
-def test_env_include_multiple_concrete_envs():
+def test_env_multiple_include_concrete_envs():
     test1, test2, combined = setup_combined_multiple_env()
 
     combined_yaml = combined.manifest["spack"]
@@ -1584,6 +1584,62 @@ def test_env_include_concrete_envs_lockfile():
     ) == set(test2.specs_by_hash)
 
 
+
+
+def test_env_include_concrete_add_env():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    # crete new env & crecretize
+    env("create", "new")
+    new_env = ev.read("new")
+    with new_env:
+        add("zlib")
+
+    new_env.concretize()
+    new_env.write()
+
+    # add new env to combined's yaml
+    path = combined.manifest_path
+
+    # Fix if not needed
+    with open(str(path), "a") as f:
+        f.write(
+            f"""\
+  - {new_env.path}
+"""
+            )
+
+    # assert thing haven't changed yet
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert new_env.path not in lockfile_as_dict["include_concrete"].keys()
+
+    # concretize combined env with new env
+    combined.concretize()
+    combined.write()
+
+    # assert changes
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert new_env.path in lockfile_as_dict["include_concrete"].keys()
+
+
+def test_env_include_concrete_remove_env():
+    test1, test2, combined = setup_combined_multiple_env()
+
+    # remove test2 from combined's yaml
+
+    # assert test2 is still in combined's lockfile
+
+    # reconcretize combined
+
+    # assert test2 is not in combined's lockfile
+
+
+
+
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
 def test_env_include_concrete_env_reconcretized(unify):
     """Double check to make sure that concrete_specs for the local specs is empty
@@ -1609,7 +1665,7 @@ def test_env_include_concrete_env_reconcretized(unify):
     assert not lockfile_as_dict["concrete_specs"]
 
 
-def test_concretize_included_concrete_env():
+def test_concretize_include_concrete_env():
     test1, _, combined = setup_combined_multiple_env()
 
     with test1:
