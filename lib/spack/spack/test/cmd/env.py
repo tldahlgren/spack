@@ -1584,8 +1584,6 @@ def test_env_include_concrete_envs_lockfile():
     ) == set(test2.specs_by_hash)
 
 
-
-
 def test_env_include_concrete_add_env():
     test1, test2, combined = setup_combined_multiple_env()
 

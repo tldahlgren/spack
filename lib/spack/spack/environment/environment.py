@@ -432,7 +432,11 @@ def ensure_env_root_path_exists():
 
 
 def set_included_envs_to_env_paths(include_concrete: List[str]) -> None:
-    """This does a thing""" # TODO: Fill out
+    """If the included environment(s) is the environment name
+    it is replaced by the path to the environment
+
+    Args:
+        include_concrete: list of env name or path to env"""
 
     for i, env_name in enumerate(include_concrete):
         if is_env_dir(env_name):
