@@ -1604,7 +1604,7 @@ def test_env_include_concrete_add_env():
             f"""\
   - {new_env.path}
 """
-            )
+        )
 
     # assert thing haven't changed yet
     with open(combined.lock_path) as f:
