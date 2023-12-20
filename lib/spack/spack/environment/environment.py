@@ -334,20 +334,28 @@ def create_in_dir(
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
     """
+    initialize_environment_dir(root, envfile=init_file)
 
-    # Explain: need to validate included envs (if there are any) before initializing
-    # the environment so we don't have an empty directory
-    if with_view is None and keep_relative and not include_concrete:
-        initialize_environment_dir(manifest_dir, envfile=init_file)
-        return Environment(manifest_dir)
+    if with_view is None and keep_relative:
+        return Environment(root)
 
-    if include_concrete:
-        set_included_envs_to_env_paths(include_concrete)
-        validate_included_envs_exists(include_concrete)
-        validate_included_envs_concrete(include_concrete)
+    try:
+        manifest = EnvironmentManifestFile(root)
 
-    initialize_environment_dir(manifest_dir, envfile=init_file)
-    manifest = EnvironmentManifestFile(manifest_dir)
+        if with_view is not None:
+            manifest.set_default_view(with_view)
+
+        if include_concrete:
+            set_included_envs_to_env_paths(include_concrete)
+            validate_included_envs_exists(include_concrete)
+            validate_included_envs_concrete(include_concrete)
+            manifest.set_include_concrete(include_concrete)
+
+        manifest.flush()
+
+    except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
+        shutil.rmtree(root)
+        raise e
 
     env = Environment(root)
 
@@ -973,10 +981,6 @@ class Environment:
             )
         else:
             self.views = {}
-
-        # Retrieve unification scheme for the concretizer
-        self._unify = spack.config.get("concretizer:unify", False)
-
 
         # Extract and process include_concrete
         # Grabs include_concrete specs and put in memory

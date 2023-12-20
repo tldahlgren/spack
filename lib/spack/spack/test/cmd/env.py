@@ -1601,7 +1601,6 @@ def test_env_include_concrete_add_env():
     # add new env to combined's yaml
     path = combined.manifest_path
 
-    # Fix if not needed
     with open(str(path), "a") as f:
         f.write(
             f"""\
@@ -1630,14 +1629,30 @@ def test_env_include_concrete_remove_env():
     test1, test2, combined = setup_combined_multiple_env()
 
     # remove test2 from combined's yaml
+    path = combined.manifest_path
+
+    with open(str(path), "r") as f:
+        lines = f.readlines()
+    with open(path, "w") as f:
+        for line in lines:
+            if line.strip("\n") != test2.path:
+                f.write(line)
 
     # assert test2 is still in combined's lockfile
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
+
+    assert test2.path in lockfile_as_dict["include_concrete"].keys()
 
     # reconcretize combined
+    combined.concretize()
+    combined.write()
 
     # assert test2 is not in combined's lockfile
+    with open(combined.lock_path) as f:
+        lockfile_as_dict = combined._read_lockfile(f)
 
-
+    assert test2.path not in lockfile_as_dict["include_concrete"].keys()
 
 
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
