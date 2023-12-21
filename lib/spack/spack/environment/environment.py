@@ -1286,6 +1286,7 @@ class Environment:
         lockfile_meta = None
         root_hash_seen = set()
         concrete_hash_seen = set()
+        self.included_concrete_specs = {}
 
         for env_path in self.include_concrete:
             # Check that environment exists
