@@ -2968,7 +2968,6 @@ def initialize_environment_dir(
     if envfile is None:
         _ensure_env_dir()
         target_manifest.write_text(default_manifest_yaml())
-
         return
 
     envfile = pathlib.Path(envfile)
@@ -3005,6 +3004,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         This function also writes a spack.yaml file that is consistent with the spack.lock
         already existing in the directory.
+
         Args:
              manifest_dir: directory where the lockfile is
         """

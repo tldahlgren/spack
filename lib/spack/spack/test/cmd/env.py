@@ -1596,15 +1596,8 @@ def test_env_include_concrete_add_env():
     new_env.concretize()
     new_env.write()
 
-    # add new env to combined's yaml
-    path = combined.manifest_path
-
-    with open(str(path), "a") as f:
-        f.write(
-            f"""\
-  - {new_env.path}
-"""
-        )
+    # add new env to combined
+    combined.include_concrete.append(new_env.path)
 
     # assert thing haven't changed yet
     with open(combined.lock_path) as f:
@@ -1626,15 +1619,8 @@ def test_env_include_concrete_add_env():
 def test_env_include_concrete_remove_env():
     test1, test2, combined = setup_combined_multiple_env()
 
-    # remove test2 from combined's yaml
-    path = combined.manifest_path
-
-    with open(str(path), "r") as f:
-        lines = f.readlines()
-    with open(path, "w") as f:
-        for line in lines:
-            if line.strip("\n") != test2.path:
-                f.write(line)
+    # remove test2 from combined
+    combined.include_concrete = [test1.path]
 
     # assert test2 is still in combined's lockfile
     with open(combined.lock_path) as f:
