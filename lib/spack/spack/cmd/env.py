@@ -321,6 +321,9 @@ def env_create_setup_parser(subparser):
         default=None,
         help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
     )
+    subparser.add_argument(
+        "--include-concrete", action="append", help="name of old environment to copy specs from"
+    )
 
 
 def env_create(args):
@@ -344,13 +347,14 @@ def env_create(args):
         dir=args.dir,
         with_view=with_view,
         keep_relative=args.keep_relative,
+        include_concrete=args.include_concrete,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
     env.regenerate_views()
 
 
-def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False, include_concrete=None):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -362,10 +366,11 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
         keep_relative (bool): if True, develop paths are copied verbatim into
             the new environment file, otherwise they may be made absolute if the
             new environment is in a different location
+        include_concrete (list): list of the included concrete environments
     """
     if not dir:
         env = ev.create(
-            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative, include_concrete=include_concrete
         )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
@@ -373,7 +378,7 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
         return env
 
     env = ev.create_in_dir(
-        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative, include_concrete=include_concrete
     )
     tty.msg("Created environment in %s" % env.path)
     tty.msg("You can activate this environment with:")

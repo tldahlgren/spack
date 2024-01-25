@@ -302,6 +302,7 @@ def create(
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
+        include_concrete: list of concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
@@ -999,15 +1000,6 @@ class Environment:
                     self.included_concrete_specs = data[included_concrete_name]
             else:
                 self.include_concrete_envs()
-
-        # Retrieve dev-build packages:
-        self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
-        for name, entry in self.dev_specs.items():
-            # spec must include a concrete version
-            assert Spec(entry["spec"]).versions.concrete_range_as_version
-            # default path is the spec name
-            if "path" not in entry:
-                self.dev_specs[name]["path"] = name
 
     def all_concretized_user_specs(self):
         concretized_user_specs = self.concretized_user_specs[:]
