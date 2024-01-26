@@ -381,6 +381,7 @@ def create_in_dir(
         init_file = pathlib.Path(init_file)
         manifest.absolutify_dev_paths(init_file.parent)
 
+
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
