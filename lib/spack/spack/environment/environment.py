@@ -2234,16 +2234,6 @@ class Environment:
         """Returns a generator for all concrete specs"""
         return traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
 
-    def all_specs(self):
-        """Return all specs, even those a user spec would shadow."""
-        roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        for env_path, included_concretized_order in self.included_concretized_order.items():
-            roots.extend(
-                [self.included_specs_by_hash[env_path][h] for h in included_concretized_order]
-            )
-        specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
-        specs.sort()
-
     def all_specs(self) -> List[Spec]:
         """Returns a list of all concrete specs"""
         return list(self.all_specs_generator())
