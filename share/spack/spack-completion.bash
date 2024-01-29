@@ -1805,6 +1805,33 @@ _spack_solve() {
     fi
 }
 
+_spack_solve_benchmark() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY="run plot"
+    fi
+}
+
+_spack_solve_benchmark_run() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -r --repetitions -o --output --reuse --configs -n --nprocess"
+    else
+        _all_packages
+    fi
+}
+
+_spack_solve_benchmark_plot() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --cdf --scatter --histogram -o --output"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
 _spack_spec() {
     if $list_options
     then
