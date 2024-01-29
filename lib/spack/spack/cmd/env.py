@@ -408,22 +408,34 @@ def env_remove(args):
     and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
+    valid_envs = []
     bad_envs = []
-    for env_name in args.rm_env:
+    invalid_envs = []
+
+    for env_name in ev.all_environment_names():
         try:
             env = ev.read(env_name)
-            read_envs.append(env)
-        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
-            bad_envs.append(env_name)
+            valid_envs.append(env_name)
 
-    # Check if env is linked to another before trying to remove
-    for name in ev.all_environment_names():
-        environ = ev.Environment(ev.root(name))
-        if ev.root(env_name) in environ.include_concrete:
-            if args.force:
-                tty.warn(f'Environment "{env_name}" is being used by environment "{name}"')
-            else:
-                tty.die(f'Environment "{env_name}" is being used by environment "{name}"')
+            if env_name in args.rm_env:
+                read_envs.append(env)
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError):
+            invalid_envs.append(env_name)
+
+            if env_name in args.rm_env:
+                bad_envs.append(env_name)
+
+        # Check if env is linked to another before trying to remove
+        for name in valid_envs:
+            # don't check if environment is included to itself
+            if name == env_name:
+                continue
+            environ = ev.Environment(ev.root(name))
+            if ev.root(env_name) in environ.include_concrete:
+                if args.force:
+                    tty.warn(f'Environment "{env_name}" is being used by environment "{name}"')
+                else:
+                    tty.die(f'Environment "{env_name}" is being used by environment "{name}"')
 
     if not args.yes_to_all:
         environments = string.plural(len(args.rm_env), "environment", show_n=False)
