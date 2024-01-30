@@ -413,7 +413,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a repo -d 'manage p
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a resource -d 'list downloadable resources (tarballs, repos, patches, etc.)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a restage -d 'revert checked out package source code'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a solve -d 'concretize a specs using an ASP solver'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a solve-benchmark -d 'benchmark concretization speed'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a spec -d 'show what would be installed, given a spec'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a stage -d 'expand downloaded archive in preparation for install'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a style -d 'runs source code style checks on spack'
@@ -2690,43 +2689,6 @@ complete -c spack -n '__fish_spack_using_command solve' -l reuse -f -a concretiz
 complete -c spack -n '__fish_spack_using_command solve' -l reuse -d 'reuse installed packages/buildcaches when possible'
 complete -c spack -n '__fish_spack_using_command solve' -l reuse-deps -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command solve' -l reuse-deps -d 'reuse installed dependencies only'
-
-# spack solve-benchmark
-set -g __fish_spack_optspecs_spack_solve_benchmark h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 solve-benchmark' -f -a run -d 'run benchmarks and produce a CSV file of timing results'
-complete -c spack -n '__fish_spack_using_command_pos 0 solve-benchmark' -f -a plot -d 'plot results recorded in a CSV file'
-complete -c spack -n '__fish_spack_using_command solve-benchmark' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command solve-benchmark' -s h -l help -d 'show this help message and exit'
-
-# spack solve-benchmark run
-set -g __fish_spack_optspecs_spack_solve_benchmark_run h/help r/repetitions= o/output= reuse configs= n/nprocess=
-
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s r -l repetitions -r -f -a repetitions
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s r -l repetitions -r -d 'number of repetitions for each spec'
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s o -l output -r -f -a output
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s o -l output -r -d 'CSV output file'
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -l reuse -f -a reuse
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -l reuse -d 'maximum reuse of buildcaches and installations'
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -l configs -r -f -a configs
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -l configs -r -d 'comma separated clingo configurations'
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s n -l nprocess -r -f -a nprocess
-complete -c spack -n '__fish_spack_using_command solve-benchmark run' -s n -l nprocess -r -d 'number of processes to use to produce the results'
-
-# spack solve-benchmark plot
-set -g __fish_spack_optspecs_spack_solve_benchmark_plot h/help cdf scatter histogram o/output=
-
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -l cdf -f -a cdf
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -l cdf -d 'CDF plot (number of packages vs. execution time)'
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -l scatter -f -a scatter
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -l scatter -d 'scatter plot (execution time vs. possible dependencies)'
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -l histogram -f -a histogram
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -l histogram -d 'histogram plot (execution time vs. number of packages)'
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -s o -l output -r -f -a output
-complete -c spack -n '__fish_spack_using_command solve-benchmark plot' -s o -l output -r -d 'output image file'
 
 # spack spec
 set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse reuse-deps
