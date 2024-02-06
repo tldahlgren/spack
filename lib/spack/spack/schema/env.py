@@ -41,6 +41,26 @@ properties: Dict[str, Any] = {
     }
 }
 
+properties: Dict[str, Any] = {
+    "spack": {
+        "type": "object",
+        "default": {},
+        "additionalProperties": False,
+        "properties": union_dicts(
+            # Include deprecated "gitlab-ci" section
+            spack.schema.gitlab_ci.properties,
+            # merged configuration scope schemas
+            spack.schema.merged.properties,
+            # extra environment schema properties
+            {
+                "include": {"type": "array", "default": [], "items": {"type": "string"}},
+                "include_concrete": {"type": "array", "default": [], "items": {"type": "string"}},
+                "specs": spack.schema.spec_list_schema,
+            },
+        ),
+    }
+}
+
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack environment file schema",
