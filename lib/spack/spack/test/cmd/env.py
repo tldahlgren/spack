@@ -63,7 +63,7 @@ def setup_combined_multiple_env():
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
-        add("libiconv")
+        add("zlib")
     test1.concretize()
     test1.write()
 
@@ -1591,7 +1591,7 @@ def test_env_include_concrete_add_env():
     env("create", "new")
     new_env = ev.read("new")
     with new_env:
-        add("zlib")
+        add("mpileaks")
 
     new_env.concretize()
     new_env.write()
@@ -1668,17 +1668,17 @@ def test_concretize_include_concrete_env():
     test1, _, combined = setup_combined_multiple_env()
 
     with test1:
-        add("zlib")
+        add("mpileaks")
     test1.concretize()
     test1.write()
 
-    assert Spec("zlib") in test1.concretized_user_specs
-    assert Spec("zlib") not in combined.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") in test1.concretized_user_specs
+    assert Spec("mpileaks") not in combined.included_concretized_user_specs[test1.path]
 
     combined.concretize()
     combined.write()
 
-    assert Spec("zlib") in combined.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
 
 
 def test_env_config_view_default(
