@@ -1501,7 +1501,8 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-def test_env_include_concrete_env_yaml():
+@pytest.mark.parametrize("env_name", [True, False])
+def test_env_include_concrete_env_yaml(env_name):
     env("create", "test")
     test = ev.read("test")
 
@@ -1510,25 +1511,9 @@ def test_env_include_concrete_env_yaml():
     test.concretize()
     test.write()
 
-    env("create", "--include-concrete", "test", "combined_env")
+    environ = "test" if env_name else test.path
 
-    combined = ev.read("combined_env")
-    combined_yaml = combined.manifest["spack"]
-
-    assert "include_concrete" in combined_yaml
-    assert test.path in combined_yaml["include_concrete"]
-
-
-def test_env_include_concrete_env_path_yaml():
-    env("create", "test")
-    test = ev.read("test")
-
-    with test:
-        add("mpileaks")
-    test.concretize()
-    test.write()
-
-    env("create", "--include-concrete", test.path, "combined_env")
+    env("create", "--include-concrete", environ, "combined_env")
 
     combined = ev.read("combined_env")
     combined_yaml = combined.manifest["spack"]
@@ -1679,6 +1664,28 @@ def test_concretize_include_concrete_env():
     combined.write()
 
     assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
+
+
+def test_concretize_include_concrete_env_in_another_env():
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("zlib")
+    test1.concretize()
+    test1.write()
+
+    env("create", "--include-concrete", "test1", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test2", "test3")
+    test3 = ev.read("test3")
+    test3_yaml = test3.manifest["spack"]
+
+    assert False
 
 
 def test_env_config_view_default(
