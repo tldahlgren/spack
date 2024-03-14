@@ -78,7 +78,7 @@ upgrade Spack to use them.
      - ✅
      - ✅
      -
-   * - ``v0.21:``
+   * - ``v0.22:``
      - ✅
      - ✅
      - ✅
