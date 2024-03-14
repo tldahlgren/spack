@@ -999,6 +999,7 @@ class Environment:
 
                 if included_concrete_name in data:
                     self.included_concrete_specs = data[included_concrete_name]
+                        # TODO: if nested include, save those too
             else:
                 self.include_concrete_envs()
 
@@ -1049,6 +1050,11 @@ class Environment:
         for env, info in self.included_concrete_specs.items():
             for root_list in info["roots"]:
                 spec_list.add(root_list["spec"])
+            # TODO: eventually loop through
+            if "include_concrete" in info:
+                for env, include_info in info["include_concrete"].items():
+                    for root_list in include_info["roots"]:
+                        spec_list.add(root_list["spec"])
 
         return spec_list
 
@@ -1313,6 +1319,10 @@ class Environment:
                         {"concrete_specs": lockfile_as_dict["concrete_specs"]}
                     )
                     concrete_hash_seen.add(concrete_spec)
+
+            # TODO: if include_concrete, recurse?
+            if "include_concrete" in lockfile_as_dict.keys():
+                self.included_concrete_specs[env_path]["include_concrete"] = lockfile_as_dict["include_concrete"]
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()

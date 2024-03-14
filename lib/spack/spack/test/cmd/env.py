@@ -1683,7 +1683,11 @@ def test_concretize_include_concrete_env_in_another_env():
 
     env("create", "--include-concrete", "test2", "test3")
     test3 = ev.read("test3")
-    test3_yaml = test3.manifest["spack"]
+
+    with open(test3.lock_path) as f:
+        lockfile_as_dict = test3._read_lockfile(f)
+
+    test3_include = lockfile_as_dict["include_concrete"][test2.path]["include_concrete"]
 
     assert False
 
