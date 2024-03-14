@@ -999,7 +999,7 @@ class Environment:
 
                 if included_concrete_name in data:
                     self.included_concrete_specs = data[included_concrete_name]
-                        # TODO: if nested include, save those too
+                    # TODO: if nested include, save those too
             else:
                 self.include_concrete_envs()
 
@@ -1322,7 +1322,9 @@ class Environment:
 
             # TODO: if include_concrete, recurse?
             if "include_concrete" in lockfile_as_dict.keys():
-                self.included_concrete_specs[env_path]["include_concrete"] = lockfile_as_dict["include_concrete"]
+                self.included_concrete_specs[env_path]["include_concrete"] = lockfile_as_dict[
+                    "include_concrete"
+                ]
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()

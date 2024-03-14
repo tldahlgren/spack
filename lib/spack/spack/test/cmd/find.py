@@ -391,7 +391,9 @@ spack:
     assert "libelf" in output
 
 
-def test_find_specs_nested_include_concrete_env(mutable_mock_env_path, config, mutable_mock_repo, tmpdir):
+def test_find_specs_nested_include_concrete_env(
+    mutable_mock_env_path, config, mutable_mock_repo, tmpdir
+):
     path = tmpdir.join("spack.yaml")
 
     with tmpdir.as_cwd():
@@ -409,7 +411,6 @@ spack:
     test1.concretize()
     test1.write()
 
-
     env("create", "--include-concrete", "test1", "test2")
     test2 = ev.read("test2")
     test2.add("libelf")
@@ -425,7 +426,6 @@ spack:
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
-
 
 
 def test_find_loaded(database, working_env):
