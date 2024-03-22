@@ -1780,9 +1780,10 @@ def test_concretize_include_concrete_env_in_another_env():
     with open(test3.lock_path) as f:
         lockfile_as_dict = test3._read_lockfile(f)
 
-    test3_include = lockfile_as_dict["include_concrete"][test2.path]["include_concrete"]
+    assert test2.path in lockfile_as_dict["include_concrete"]
+    assert test1.path in lockfile_as_dict["include_concrete"][test2.path]["include_concrete"]
 
-    assert False
+    assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
 
 
 def test_env_config_view_default(
