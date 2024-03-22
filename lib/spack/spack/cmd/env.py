@@ -132,7 +132,8 @@ def _env_create(
     dir=False,
     with_view=None,
     keep_relative=False,
-    include_concrete=None):
+    include_concrete=None,
+):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -152,7 +153,7 @@ def _env_create(
             init_file=init_file,
             with_view=with_view,
             keep_relative=keep_relative,
-            include_concrete=include_concrete
+            include_concrete=include_concrete,
         )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
@@ -164,7 +165,7 @@ def _env_create(
         init_file=init_file,
         with_view=with_view,
         keep_relative=keep_relative,
-        include_concrete=include_concrete
+        include_concrete=include_concrete,
     )
     tty.msg("Created environment in %s" % env.path)
     tty.msg("You can activate this environment with:")
