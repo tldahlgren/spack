@@ -1049,7 +1049,7 @@ class Environment:
 
                 if included_concrete_name in data:
                     self.included_concrete_specs = data[included_concrete_name]
-                    # TODO: if nested include, save those too
+                    # TODO Rikki: if nested include, save those too
             else:
                 self.include_concrete_envs()
 
@@ -1100,7 +1100,7 @@ class Environment:
         for env, info in self.included_concrete_specs.items():
             for root_list in info["roots"]:
                 spec_list.add(root_list["spec"])
-            # TODO: eventually loop through
+            # TODO Rikki: eventually loop through
             if "include_concrete" in info:
                 for env, include_info in info["include_concrete"].items():
                     for root_list in include_info["roots"]:
@@ -1224,7 +1224,7 @@ class Environment:
                     )
                     concrete_hash_seen.add(concrete_spec)
 
-            # TODO: if include_concrete, recurse?
+            # TODO Rikki: if include_concrete, recurse?
             if "include_concrete" in lockfile_as_dict.keys():
                 self.included_concrete_specs[env_path]["include_concrete"] = lockfile_as_dict[
                     "include_concrete"
@@ -2186,25 +2186,23 @@ class Environment:
         self._read_lockfile_dict(lockfile_dict)
         return lockfile_dict
 
-
     def set_included_concretized_user_specs(self, env_name, env_info, included_json_specs_by_hash):
-            self.included_concretized_order[env_name] = []
-            self.included_concretized_user_specs[env_name] = []
-            for root_info in env_info["roots"]:
-                self.included_concretized_order[env_name].append(root_info["hash"])
-                self.included_concretized_user_specs[env_name].append(Spec(root_info["spec"]))
-            if "concrete_specs" in env_info:
-                included_json_specs_by_hash.update(env_info["concrete_specs"])
+        self.included_concretized_order[env_name] = []
+        self.included_concretized_user_specs[env_name] = []
+        for root_info in env_info["roots"]:
+            self.included_concretized_order[env_name].append(root_info["hash"])
+            self.included_concretized_user_specs[env_name].append(Spec(root_info["spec"]))
+        if "concrete_specs" in env_info:
+            included_json_specs_by_hash.update(env_info["concrete_specs"])
 
-            if included_concrete_name in env_info:
-                for included_name, included_info in env_info[included_concrete_name].items():
-                    self.set_included_concretized_user_specs(
-                        included_name,
-                        included_info,
-                        included_json_specs_by_hash)
+        if included_concrete_name in env_info:
+            for included_name, included_info in env_info[included_concrete_name].items():
+                self.set_included_concretized_user_specs(
+                    included_name,
+                    included_info,
+                    included_json_specs_by_hash)
 
-            return included_json_specs_by_hash
-
+        return included_json_specs_by_hash
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
