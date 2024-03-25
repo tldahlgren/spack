@@ -2186,6 +2186,26 @@ class Environment:
         self._read_lockfile_dict(lockfile_dict)
         return lockfile_dict
 
+
+    def set_included_concretized_user_specs(self, env_name, env_info, included_json_specs_by_hash):
+            self.included_concretized_order[env_name] = []
+            self.included_concretized_user_specs[env_name] = []
+            for root_info in env_info["roots"]:
+                self.included_concretized_order[env_name].append(root_info["hash"])
+                self.included_concretized_user_specs[env_name].append(Spec(root_info["spec"]))
+            if "concrete_specs" in env_info:
+                included_json_specs_by_hash.update(env_info["concrete_specs"])
+
+            if included_concrete_name in env_info:
+                for included_name, included_info in env_info[included_concrete_name].items():
+                    self.set_included_concretized_user_specs(
+                        included_name,
+                        included_info,
+                        included_json_specs_by_hash)
+
+            return included_json_specs_by_hash
+
+
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
         self.specs_by_hash = {}
@@ -2201,13 +2221,13 @@ class Environment:
 
         if included_concrete_name in d:
             for env_name, env_info in d[included_concrete_name].items():
-                self.included_concretized_order[env_name] = []
-                self.included_concretized_user_specs[env_name] = []
-                for root_info in env_info["roots"]:
-                    self.included_concretized_order[env_name].append(root_info["hash"])
-                    self.included_concretized_user_specs[env_name].append(Spec(root_info["spec"]))
-                if "concrete_specs" in env_info:
-                    included_json_specs_by_hash.update(env_info["concrete_specs"])
+                included_json_specs_by_hash.update(
+                    self.set_included_concretized_user_specs(
+                        env_name,
+                        env_info,
+                        included_json_specs_by_hash
+                    )
+                )
 
         current_lockfile_format = d["_meta"]["lockfile-version"]
         try:
