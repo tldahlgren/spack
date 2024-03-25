@@ -2198,9 +2198,8 @@ class Environment:
         if included_concrete_name in env_info:
             for included_name, included_info in env_info[included_concrete_name].items():
                 self.set_included_concretized_user_specs(
-                    included_name,
-                    included_info,
-                    included_json_specs_by_hash)
+                    included_name, included_info, included_json_specs_by_hash
+                )
 
         return included_json_specs_by_hash
 
@@ -2221,9 +2220,7 @@ class Environment:
             for env_name, env_info in d[included_concrete_name].items():
                 included_json_specs_by_hash.update(
                     self.set_included_concretized_user_specs(
-                        env_name,
-                        env_info,
-                        included_json_specs_by_hash
+                        env_name, env_info, included_json_specs_by_hash
                     )
                 )
 
