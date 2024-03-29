@@ -112,13 +112,17 @@ def env_create(args):
         # the environment should not include a view.
         with_view = None
 
+    include_concrete = None
+    if hasattr(args, 'include_concrete'):
+       include_concrete = args.include_concrete
+
     env = _env_create(
         args.env_name,
         init_file=args.envfile,
         dir=args.dir,
         with_view=with_view,
         keep_relative=args.keep_relative,
-        include_concrete=args.include_concrete,
+        include_concrete=include_concrete,
     )
 
     # Generate views, only really useful for environments created from spack.lock files.

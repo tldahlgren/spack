@@ -1759,7 +1759,7 @@ def test_concretize_include_concrete_env():
     assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
 
 
-def test_concretize_include_concrete_env_in_another_env():
+def test_concretize_nested_include_concrete_envs():
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
@@ -1784,6 +1784,44 @@ def test_concretize_include_concrete_env_in_another_env():
     assert test1.path in lockfile_as_dict["include_concrete"][test2.path]["include_concrete"]
 
     assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
+
+
+def test_concretze_include_concrete_name_later():
+    env("create", "test1")
+    test1 = ev.read("test1")
+    with test1:
+        add("zlib")
+    test1.concretize()
+    test1.write()
+
+    env("create", "--include-concrete", "test1", "test2")
+    test2 = ev.read("test2")
+    with test2:
+        add("libelf")
+    test2.concretize()
+    test2.write()
+
+    with test1:
+        remove("zlib")
+        add("mpileaks")
+    test1.concretize()
+
+    env("create", "--include-concrete", "test1", "test3")
+    test3 = ev.read("test3")
+    with test3:
+        add("callpath")
+    test3.concretize()
+    test3.write()
+
+    env("create", "--include-concrete", "test2", "--include-concrete", "test3", "test4")
+    test4 = ev.read("test4")
+    with open(test4.lock_path) as f:
+        lockfile_as_dict = test4._read_lockfile(f)
+
+    assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") in test3.included_concretized_user_specs[test1.path]
+
+    assert False
 
 
 def test_env_config_view_default(

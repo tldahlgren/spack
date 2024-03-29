@@ -1224,7 +1224,6 @@ class Environment:
                     )
                     concrete_hash_seen.add(concrete_spec)
 
-            # TODO Rikki: if include_concrete, recurse?
             if "include_concrete" in lockfile_as_dict.keys():
                 self.included_concrete_specs[env_path]["include_concrete"] = lockfile_as_dict[
                     "include_concrete"
