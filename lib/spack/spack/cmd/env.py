@@ -113,8 +113,8 @@ def env_create(args):
         with_view = None
 
     include_concrete = None
-    if hasattr(args, 'include_concrete'):
-       include_concrete = args.include_concrete
+    if hasattr(args, "include_concrete"):
+        include_concrete = args.include_concrete
 
     env = _env_create(
         args.env_name,
