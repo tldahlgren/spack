@@ -1786,7 +1786,9 @@ def test_concretize_nested_include_concrete_envs():
     assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
 
 
-def test_concretze_include_concrete_name_later():
+def test_concretize_include_concrete_name_later():
+    """Confirm concrete included environments have specs concretized at
+    environment creation time."""
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
@@ -1794,6 +1796,7 @@ def test_concretze_include_concrete_name_later():
     test1.concretize()
     test1.write()
 
+    # test2 should include test1 with zlib
     env("create", "--include-concrete", "test1", "test2")
     test2 = ev.read("test2")
     with test2:
@@ -1801,10 +1804,14 @@ def test_concretze_include_concrete_name_later():
     test2.concretize()
     test2.write()
 
+    assert Spec("zlib") in test2.included_concretized_user_specs[test1.path]
+
+    # test3 should include the modified/concretized test1 with mpileaks
     with test1:
         remove("zlib")
         add("mpileaks")
     test1.concretize()
+    test1.write()
 
     env("create", "--include-concrete", "test1", "test3")
     test3 = ev.read("test3")
@@ -1813,14 +1820,36 @@ def test_concretze_include_concrete_name_later():
     test3.concretize()
     test3.write()
 
+    included_specs = test3.included_concretized_user_specs[test1.path]
+    assert len(included_specs) == 1
+    assert Spec("mpileaks") in included_specs
+
+    # test4 should include test2 with the original concretized test1 spec
+    # and test3 with the re-concretized test1 spec.
     env("create", "--include-concrete", "test2", "--include-concrete", "test3", "test4")
     test4 = ev.read("test4")
+
+    included_test2 = test4.included_concretized_user_specs[test2.path]
+    assert Spec("libelf") in included_test2
+
+    included_test3 = test4.included_concretized_user_specs[test3.path]
+    assert Spec("callpath") in included_test3
+
+    # TBD: How should the nested included specs be accessed?
     with open(test4.lock_path) as f:
         lockfile_as_dict = test4._read_lockfile(f)
 
-    assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
-    assert Spec("mpileaks") in test3.included_concretized_user_specs[test1.path]
+    def included_included_spec(path1, path2):
+        included = lockfile_as_dict["include_concrete"][path1]
+        return included["include_concrete"][path2]["roots"][0]["spec"]
 
+    included_test2_test1 = included_included_spec(test2.path, test1.path)
+    assert "zlib" in included_test2_test1
+
+    included_test3_test1 = included_included_spec(test3.path, test1.path)
+    assert "mpileaks" in included_test3_test1
+
+    # TODO: Remove this once nested included specs are properly retrieved
     assert False
 
 
