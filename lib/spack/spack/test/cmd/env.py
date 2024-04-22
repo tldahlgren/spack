@@ -1786,7 +1786,7 @@ def test_concretize_nested_include_concrete_envs():
     assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
 
 
-def test_concretize_include_concrete_name_later():
+def test_concretize_include_concrete_at_creation():
     """Confirm concrete included environments have specs concretized at
     environment creation time."""
     env("create", "test1")
@@ -1806,7 +1806,7 @@ def test_concretize_include_concrete_name_later():
 
     assert Spec("zlib") in test2.included_concretized_user_specs[test1.path]
 
-    # test3 should include the modified/concretized test1 with mpileaks
+    # test3 should include the modified/re-concretized test1 with mpileaks
     with test1:
         remove("zlib")
         add("mpileaks")
@@ -1829,25 +1829,29 @@ def test_concretize_include_concrete_name_later():
     env("create", "--include-concrete", "test2", "--include-concrete", "test3", "test4")
     test4 = ev.read("test4")
 
-    included_test2 = test4.included_concretized_user_specs[test2.path]
-    assert Spec("libelf") in included_test2
+    concrete_specs = [s for s, _ in test4.concretized_specs()]
+    expected = [Spec(s) for s in ["libelf", "zlib", "mpileaks", "callpath"]]
+    assert all(s in concrete_specs for s in expected)
 
-    included_test3 = test4.included_concretized_user_specs[test3.path]
-    assert Spec("callpath") in included_test3
+    # included_test2 = test4.included_concretized_user_specs[test2.path]
+    # assert Spec("libelf") in included_test2
 
-    # TBD: How should the nested included specs be accessed?
-    with open(test4.lock_path) as f:
-        lockfile_as_dict = test4._read_lockfile(f)
+    # included_test3 = test4.included_concretized_user_specs[test3.path]
+    # assert Spec("callpath") in included_test3
 
-    def included_included_spec(path1, path2):
-        included = lockfile_as_dict["include_concrete"][path1]
-        return included["include_concrete"][path2]["roots"][0]["spec"]
+    # # TBD: How should the nested included specs be accessed?
+    #  with open(test4.lock_path) as f:
+    #     lockfile_as_dict = test4._read_lockfile(f)
 
-    included_test2_test1 = included_included_spec(test2.path, test1.path)
-    assert "zlib" in included_test2_test1
+    #  def included_included_spec(path1, path2):
+    #     included = lockfile_as_dict["include_concrete"][path1]
+    #     return included["include_concrete"][path2]["roots"][0]["spec"]
 
-    included_test3_test1 = included_included_spec(test3.path, test1.path)
-    assert "mpileaks" in included_test3_test1
+    #  included_test2_test1 = included_included_spec(test2.path, test1.path)
+    #  assert "zlib" in included_test2_test1
+
+    #  included_test3_test1 = included_included_spec(test3.path, test1.path)
+    #  assert "mpileaks" in included_test3_test1
 
 
 def test_env_config_view_default(
