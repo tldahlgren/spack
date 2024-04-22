@@ -1849,9 +1849,6 @@ def test_concretize_include_concrete_name_later():
     included_test3_test1 = included_included_spec(test3.path, test1.path)
     assert "mpileaks" in included_test3_test1
 
-    # TODO: Remove this once nested included specs are properly retrieved
-    assert False
-
 
 def test_env_config_view_default(
     environment_from_manifest, mock_stage, mock_fetch, install_mockery
