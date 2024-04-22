@@ -272,9 +272,9 @@ def find(parser, args):
     results = args.specs(**q_args)
 
     env = ev.active_environment()
-    decorator = lambda s, f: f
+    decorator = None
     if env:
-        decorator, _, roots, _ = setup_env(env)
+        decorator, _, _, _ = setup_env(env)
 
     # use groups by default except with format.
     if args.groups is None:
