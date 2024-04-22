@@ -334,7 +334,7 @@ def display_specs(specs, args=None, **kwargs):
         variants (bool): Show variants with specs
         indent (int): indent each line this much
         groups (bool): display specs grouped by arch/compiler (default True)
-        decorators (dict): dictionary mappng specs to decorators
+        decorator (dict): dictionary mapping specs to decorator
         header_callback (typing.Callable): called at start of arch/compiler groups
         all_headers (bool): show headers even when arch/compiler aren't defined
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
