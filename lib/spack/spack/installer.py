@@ -2313,7 +2313,7 @@ class PackageInstaller:
                     )
                 # Terminate if requested to do so on the first failure.
                 if self.fail_fast:
-                    raise InstallError(f"{fail_fast_err}: {str(exc)}", pkg=pkg)
+                    raise InstallError(f"{fail_fast_err}: {str(exc)}", pkg=pkg) from exc
 
                 # Terminate when a single build request has failed, or summarize errors later.
                 if task.is_build_request:
